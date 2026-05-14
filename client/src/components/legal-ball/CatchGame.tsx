@@ -17,6 +17,7 @@ import {
   getPremierBonusForPurchase,
   getShopOffers,
   throwBall,
+  TYPE_BALL_HINTS,
 } from '@/lib/catch-game';
 
 const STORAGE_KEY = 'poke-bowl-catch-game-v2';
@@ -68,6 +69,17 @@ type AchievementDefinition = {
   reward: AchievementReward;
 };
 
+type TypeSupplyDefinition = {
+  id: string;
+  type: string;
+  stage: number;
+  target: number;
+  title: string;
+  desc: string;
+  unlocked: boolean;
+  reward: AchievementReward;
+};
+
 type SavedState = {
   inventory: Inventory;
   score: number;
@@ -78,7 +90,9 @@ type SavedState = {
   history: CatchRecord[];
   encounter: Encounter;
   shopStats: ShopStats;
+  typeCatchStats?: Record<string, number>;
   claimedAchievements?: string[];
+  claimedTypeSupplies?: string[];
   activeTab?: GameTab;
 };
 
@@ -134,6 +148,15 @@ function genderLabel(gender: CatchGender) {
   return '—';
 }
 
+function normalizeTypeCatchStats(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(raw as Record<string, unknown>)
+      .filter(([type, count]) => typeof type === 'string' && typeof count === 'number')
+      .map(([type, count]) => [type, Number(count) || 0]),
+  );
+}
+
 function defaultShopStats(): ShopStats {
   return {
     purchaseCount: 0,
@@ -164,9 +187,12 @@ export function CatchGame() {
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
   const [lastShopAction, setLastShopAction] = useState<string | null>(null);
   const [lastAchievementAction, setLastAchievementAction] = useState<string | null>(null);
+  const [lastTypeSupplyAction, setLastTypeSupplyAction] = useState<string | null>(null);
   const [shopStats, setShopStats] = useState<ShopStats>(defaultShopStats);
+  const [typeCatchStats, setTypeCatchStats] = useState<Record<string, number>>({});
   const [shopQuantities, setShopQuantities] = useState<Record<string, number>>({});
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>([]);
+  const [claimedTypeSupplies, setClaimedTypeSupplies] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<GameTab>('home');
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
@@ -177,6 +203,7 @@ export function CatchGame() {
   const totalBalls = useMemo(() => Object.values(inventory).reduce((sum, count) => sum + count, 0), [inventory]);
   const caughtCount = Object.keys(collection).length;
   const successfulCatchCount = history.filter((item) => item.success).length;
+  const topTypeEntry = useMemo(() => Object.entries(typeCatchStats).sort((a, b) => b[1] - a[1])[0] ?? null, [typeCatchStats]);
   const unlockedAchievementCount = useMemo(() => {
     let unlocked = 0;
     if (caughtCount >= 1) unlocked += 1;
@@ -214,7 +241,9 @@ export function CatchGame() {
         setHistory(saved.history ?? []);
         setEncounter(saved.encounter ?? createEncounter());
         setShopStats(saved.shopStats ?? defaultShopStats());
+        setTypeCatchStats(normalizeTypeCatchStats(saved.typeCatchStats));
         setClaimedAchievements(saved.claimedAchievements ?? []);
+        setClaimedTypeSupplies(saved.claimedTypeSupplies ?? []);
         setActiveTab(saved.activeTab ?? 'home');
       }
     } catch {
@@ -236,11 +265,13 @@ export function CatchGame() {
       history,
       encounter,
       shopStats,
+      typeCatchStats,
       claimedAchievements,
+      claimedTypeSupplies,
       activeTab,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, claimedAchievements, activeTab]);
+  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, typeCatchStats, claimedAchievements, claimedTypeSupplies, activeTab]);
 
   useEffect(() => {
     if ((inventory[selectedBall] ?? 0) > 0) return;
@@ -272,9 +303,12 @@ export function CatchGame() {
     setLastReward(null);
     setLastShopAction(null);
     setLastAchievementAction(null);
+    setLastTypeSupplyAction(null);
     setShopStats(defaultShopStats());
+    setTypeCatchStats({});
     setShopQuantities({});
     setClaimedAchievements([]);
+    setClaimedTypeSupplies([]);
     setSelectedBall('poke-ball');
     setActiveTab('home');
     setBagOpen(false);
@@ -339,6 +373,13 @@ export function CatchGame() {
           },
         };
       });
+      setTypeCatchStats((prev) => {
+        const next = { ...prev };
+        for (const type of encounter.pokemon.types) {
+          next[type] = (next[type] ?? 0) + 1;
+        }
+        return next;
+      });
       setEncounter((prev) => ({ ...prev, caught: true }));
       return;
     }
@@ -392,25 +433,37 @@ export function CatchGame() {
     return parts.join(' · ');
   }
 
-  function claimAchievement(achievement: AchievementDefinition) {
-    if (!achievement.unlocked || claimedAchievements.includes(achievement.id)) return;
+  function awardReward(reward: AchievementReward) {
+    const rewardCoins = reward.coins ?? 0;
+    const rewardBalls = reward.balls ?? [];
 
-    if (achievement.reward.coins) {
-      setCoins((prev) => prev + achievement.reward.coins!);
+    if (rewardCoins > 0) {
+      setCoins((prev) => prev + rewardCoins);
     }
 
-    if (achievement.reward.balls?.length) {
+    if (rewardBalls.length) {
       setInventory((prev) => {
         const next = { ...prev };
-        for (const rewardBall of achievement.reward.balls!) {
+        for (const rewardBall of rewardBalls) {
           next[rewardBall.ballKey] = (next[rewardBall.ballKey] ?? 0) + rewardBall.count;
         }
         return next;
       });
     }
+  }
 
+  function claimAchievement(achievement: AchievementDefinition) {
+    if (!achievement.unlocked || claimedAchievements.includes(achievement.id)) return;
+    awardReward(achievement.reward);
     setClaimedAchievements((prev) => [...prev, achievement.id]);
     setLastAchievementAction(`${achievement.title} 보상 수령 · ${formatAchievementReward(achievement.reward)}`);
+  }
+
+  function claimTypeSupply(reward: TypeSupplyDefinition) {
+    if (!reward.unlocked || claimedTypeSupplies.includes(reward.id)) return;
+    awardReward(reward.reward);
+    setClaimedTypeSupplies((prev) => [...prev, reward.id]);
+    setLastTypeSupplyAction(`${reward.title} 수령 · ${formatAchievementReward(reward.reward)}`);
   }
 
   useEffect(() => {
@@ -454,7 +507,36 @@ export function CatchGame() {
     { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500, reward: { coins: 300, balls: [{ ballKey: 'beast-ball', count: 1 }] } },
   ];
 
+  const typeSupplyDefinitions: TypeSupplyDefinition[] = useMemo(() => {
+    return Object.entries(TYPE_BALL_HINTS).flatMap(([type, balls]) => {
+      const count = typeCatchStats[type] ?? 0;
+      const stages = [
+        { stage: 1, target: 5, coins: 70, balls: [{ ballKey: balls[0], count: 2 }] },
+        { stage: 2, target: 12, coins: 150, balls: [{ ballKey: balls[0], count: 2 }, { ballKey: balls[1] ?? balls[0], count: 1 }] },
+        { stage: 3, target: 25, coins: 260, balls: [{ ballKey: balls[1] ?? balls[0], count: 2 }, { ballKey: balls[2] ?? balls[0], count: 1 }] },
+      ];
+      return stages.map((stageDef) => ({
+        id: `type-${type.toLowerCase()}-${stageDef.stage}`,
+        type,
+        stage: stageDef.stage,
+        target: stageDef.target,
+        title: `${type} 보급 ${stageDef.stage}단계`,
+        desc: `${type} 타입 포켓몬을 ${stageDef.target}회 포획했다.`,
+        unlocked: count >= stageDef.target,
+        reward: { coins: stageDef.coins, balls: stageDef.balls },
+      }));
+    });
+  }, [typeCatchStats]);
+
   const claimableAchievementCount = achievements.filter((achievement) => achievement.unlocked && !claimedAchievements.includes(achievement.id)).length;
+  const claimableTypeSupplyCount = typeSupplyDefinitions.filter((reward) => reward.unlocked && !claimedTypeSupplies.includes(reward.id)).length;
+  const visibleTypeSupplyDefinitions = typeSupplyDefinitions
+    .filter((reward) => reward.unlocked || (typeCatchStats[reward.type] ?? 0) > 0)
+    .sort((a, b) => {
+      const progressDiff = (typeCatchStats[b.type] ?? 0) - (typeCatchStats[a.type] ?? 0);
+      if (progressDiff !== 0) return progressDiff;
+      return a.target - b.target;
+    });
 
   return (
     <>
@@ -500,7 +582,7 @@ export function CatchGame() {
           <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
           <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
           <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
-          <StatCard label="보상 대기" value={`${claimableAchievementCount}개`} tone="zinc" />
+          <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
         </section>
 
         {activeTab === 'home' ? (
@@ -534,12 +616,13 @@ export function CatchGame() {
             </HubCard>
             <HubCard
               title="업적"
-              desc="연속 포획, 수집, 쇼핑 등 게임 루프 진행도를 업적으로 확인한다."
+              desc="연속 포획, 수집, 쇼핑, 타입 보급까지 한 번에 관리한다."
               actionLabel="업적 보기"
               onAction={() => setActiveTab('achievements')}
               tone="zinc"
             >
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length} · 대기 {claimableAchievementCount}개</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length} · 업적 대기 {claimableAchievementCount}개 · 타입 보급 대기 {claimableTypeSupplyCount}개</p>
+              {topTypeEntry ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">현재 가장 많이 잡은 타입: {topTypeEntry[0]} {topTypeEntry[1]}회</p> : null}
             </HubCard>
           </section>
         ) : null}
@@ -834,9 +917,10 @@ export function CatchGame() {
 
         {activeTab === 'achievements' ? (
           <section className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
               <MiniStat label="해금 업적" value={`${unlockedAchievementCount}/${achievements.length}`} />
-              <MiniStat label="수령 대기" value={`${claimableAchievementCount}개`} />
+              <MiniStat label="업적 대기" value={`${claimableAchievementCount}개`} />
+              <MiniStat label="타입 보급 대기" value={`${claimableTypeSupplyCount}개`} />
               <MiniStat label="최고 연속" value={`${bestStreak}회`} />
               <MiniStat label="도감 등록" value={`${caughtCount}종`} />
             </div>
@@ -875,6 +959,58 @@ export function CatchGame() {
                 );
               })}
             </div>
+
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">타입 보급 보상</h3>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">특정 타입을 많이 잡으면 그 타입 분위기에 맞는 볼을 보급 상자로 챙길 수 있다.</p>
+                </div>
+                {topTypeEntry ? <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-800 dark:bg-sky-950 dark:text-sky-200">최다 타입 {topTypeEntry[0]} · {topTypeEntry[1]}회</span> : null}
+              </div>
+
+              {lastTypeSupplyAction ? (
+                <div className="mt-4 rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:bg-sky-950/40 dark:text-sky-100">
+                  {lastTypeSupplyAction}
+                </div>
+              ) : null}
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {visibleTypeSupplyDefinitions.length ? visibleTypeSupplyDefinitions.map((reward) => {
+                  const claimed = claimedTypeSupplies.includes(reward.id);
+                  const claimable = reward.unlocked && !claimed;
+                  const progress = typeCatchStats[reward.type] ?? 0;
+                  return (
+                    <div key={reward.id} className={`rounded-2xl border p-4 ${reward.unlocked ? 'border-sky-300 bg-sky-50 dark:border-sky-900 dark:bg-sky-950/20' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{reward.title}</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{reward.type} · {reward.stage}단계</p>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${claimed ? 'bg-sky-600 text-white' : reward.unlocked ? 'bg-emerald-600 text-white' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'}`}>
+                          {claimed ? '수령 완료' : reward.unlocked ? '수령 가능' : `${progress}/${reward.target}`}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{reward.desc}</p>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                        <div className="h-full rounded-full bg-sky-500 transition-all" style={{ width: `${Math.min(100, (progress / reward.target) * 100)}%` }} />
+                      </div>
+                      <div className="mt-3 rounded-2xl bg-white/80 px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200">
+                        보상: {formatAchievementReward(reward.reward)}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={!claimable}
+                        onClick={() => claimTypeSupply(reward)}
+                        className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                      >
+                        {claimed ? '수령 완료' : claimable ? '보급 받기' : '조건 미달'}
+                      </button>
+                    </div>
+                  );
+                }) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 특정 타입을 누적해서 잡은 기록이 없다.</p>}
+              </div>
+            </article>
           </section>
         ) : null}
       </div>

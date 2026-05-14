@@ -47,7 +47,7 @@ const allPokemon = getPokemonList();
 const curatedPokemon = allPokemon.filter((item) => item.curated);
 const allBalls = getBallCatalog();
 
-const TYPE_BALL_HINTS: Record<string, string[]> = {
+export const TYPE_BALL_HINTS: Record<string, string[]> = {
   Grass: ['friend-ball', 'nest-ball', 'safari-ball'],
   Fire: ['level-ball', 'repeat-ball', 'cherish-ball'],
   Water: ['lure-ball', 'dive-ball', 'net-ball'],
