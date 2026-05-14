@@ -5,7 +5,7 @@ ultra-ball,하이퍼볼,Ultra Ball,"black,yellow",common,Ultra Ball,30
 master-ball,마스터볼,Master Ball,"purple,master",special,Master Ball,40
 premier-ball,프레미어볼,Premier Ball,"white,clean",common,Premier Ball,50
 heal-ball,힐볼,Heal Ball,"pink,soft",common,Heal Ball,60
-net-ball,넷트볼,Net Ball,"teal,water",common,Net Ball,70
+net-ball,네트볼,Net Ball,"teal,water",common,Net Ball,70
 nest-ball,네스트볼,Nest Ball,"green,earth",common,Nest Ball,80
 dive-ball,다이브볼,Dive Ball,"blue,water",common,Dive Ball,90
 dusk-ball,다크볼,Dusk Ball,"green,dark",common,Dusk Ball,100
@@ -23,6 +23,6 @@ heavy-ball,헤비볼,Heavy Ball,"gray,heavy",apricorn,Heavy Ball,210
 dream-ball,드림볼,Dream Ball,"pink,dreamy",special,Dream Ball,220
 beast-ball,울트라볼,Beast Ball,"blue,ultra",special,Beast Ball,230
 safari-ball,사파리볼,Safari Ball,"green,safari",special,Safari Ball,240
-sport-ball,컴페볼,Sport Ball,"red,sport",special,Sport Ball,250
+sport-ball,컴퍼티션볼,Sport Ball,"red,sport",special,Sport Ball,250
 strange-ball,이상한볼,Strange Ball,"gray,strange",special,Strange Ball,260
 cherish-ball,프레셔스볼,Cherish Ball,"red,event",special,Cherish Ball,270

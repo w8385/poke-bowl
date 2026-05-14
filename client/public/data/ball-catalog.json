@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T13:30:02.145Z",
+  "updatedAt": "2026-05-14T15:58:31.138Z",
   "balls": [
     {
       "key": "poke-ball",
@@ -81,7 +81,7 @@
     },
     {
       "key": "net-ball",
-      "nameKo": "넷트볼",
+      "nameKo": "네트볼",
       "nameEn": "Net Ball",
       "rarityTier": "common",
       "officialName": "Net Ball",
@@ -315,7 +315,7 @@
     },
     {
       "key": "sport-ball",
-      "nameKo": "컴페볼",
+      "nameKo": "컴퍼티션볼",
       "nameEn": "Sport Ball",
       "rarityTier": "special",
       "officialName": "Sport Ball",
