@@ -11,7 +11,6 @@ import {
   DEFAULT_INVENTORY,
   Encounter,
   Inventory,
-  SHOP_BUNDLE_STEPS,
   createEncounter,
   getCatchReward,
   getOwnedBalls,
@@ -92,6 +91,7 @@ export function CatchGame() {
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
   const [lastShopAction, setLastShopAction] = useState<string | null>(null);
   const [shopStats, setShopStats] = useState<ShopStats>(defaultShopStats);
+  const [shopQuantities, setShopQuantities] = useState<Record<string, number>>({});
   const [activeTab, setActiveTab] = useState<GameTab>('home');
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
@@ -194,6 +194,7 @@ export function CatchGame() {
     setLastReward(null);
     setLastShopAction(null);
     setShopStats(defaultShopStats());
+    setShopQuantities({});
     setSelectedBall('poke-ball');
     setActiveTab('home');
     setBagOpen(false);
@@ -256,6 +257,10 @@ export function CatchGame() {
     setEncounter((prev) => ({ ...prev, turn: prev.turn + 1 }));
   }
 
+  function changeShopQuantity(ballKey: string, nextQuantity: number) {
+    setShopQuantities((prev) => ({ ...prev, [ballKey]: Math.max(1, Math.min(99, nextQuantity)) }));
+  }
+
   function buyOffer(ballKey: string, quantity: number, price: number, ballName: string) {
     if (coins < price) return;
     const premierBonus = getPremierBonusForPurchase(quantity);
@@ -271,7 +276,7 @@ export function CatchGame() {
       premierBonusEarned: prev.premierBonusEarned + premierBonus,
     }));
     setSelectedBall(ballKey);
-    setLastShopAction(`${ballName} ${quantity}개 구매 · -${price}코인${premierBonus > 0 ? ` · 프리미어볼 ${premierBonus}개 서비스` : ''}`);
+    setLastShopAction(`${ballName} ${quantity}개 구매 · -${price}코인`);
   }
 
   function handleBagWheel(event: WheelEvent<HTMLDivElement>) {
@@ -541,7 +546,7 @@ export function CatchGame() {
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <MiniStat label="구매 횟수" value={`${shopStats.purchaseCount}회`} />
               <MiniStat label="구매한 볼" value={`${shopStats.purchasedBalls}개`} />
-              <MiniStat label="서비스 프리미어" value={`${shopStats.premierBonusEarned}개`} />
+              <MiniStat label="상점 이용" value={shopStats.purchaseCount > 0 ? '활성' : '대기'} />
             </div>
 
             {lastShopAction ? (
@@ -550,13 +555,13 @@ export function CatchGame() {
               </div>
             ) : null}
 
-            <div className="mt-4 rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-200">
-              상점 규칙: 구매 수량이 <span className="font-semibold">10개</span>를 넘길 때마다 <span className="font-semibold">프리미어볼 1개</span>를 서비스로 준다.
-            </div>
-
             <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {shopOffers.map((offer) => {
                 const owned = inventory[offer.ballKey] ?? 0;
+                const selectedBundles = shopQuantities[offer.ballKey] ?? 1;
+                const totalQuantity = offer.quantity * selectedBundles;
+                const totalPrice = offer.price * selectedBundles;
+                const affordable = coins >= totalPrice;
                 return (
                   <div key={offer.ballKey} className={`rounded-2xl border p-4 ${offer.featured ? 'border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/60'}`}>
                     <div className="flex items-start justify-between gap-3">
@@ -564,35 +569,51 @@ export function CatchGame() {
                         <BallIcon ballKey={offer.ballKey} size={30} />
                         <div>
                           <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{offer.ball.nameKo}</p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">현재 x{owned} · 기본 묶음 {offer.quantity}개</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">현재 x{owned} · 묶음당 {offer.quantity}개</p>
                         </div>
                       </div>
                       <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">{offer.price}코인</span>
                     </div>
 
-                    <div className="mt-4 grid gap-2">
-                      {SHOP_BUNDLE_STEPS.map((bundleStep) => {
-                        const totalQuantity = offer.quantity * bundleStep;
-                        const totalPrice = offer.price * bundleStep;
-                        const premierBonus = getPremierBonusForPurchase(totalQuantity);
-                        const affordable = coins >= totalPrice;
-                        return (
+                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">구매 수량</p>
+                        <div className="flex items-center gap-2">
                           <button
-                            key={`${offer.ballKey}-${bundleStep}`}
                             type="button"
-                            disabled={!affordable}
-                            onClick={() => buyOffer(offer.ballKey, totalQuantity, totalPrice, offer.ball.nameKo)}
-                            className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
+                            onClick={() => changeShopQuantity(offer.ballKey, selectedBundles - 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
                           >
-                            <div>
-                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{bundleStep}묶음 · {totalQuantity}개</p>
-                              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{premierBonus > 0 ? `프리미어볼 ${premierBonus}개 서비스 포함` : '서비스 없음'}</p>
-                            </div>
-                            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{affordable ? `${totalPrice}코인` : `${totalPrice - coins}코인 부족`}</span>
+                            −
                           </button>
-                        );
-                      })}
+                          <div className="min-w-[76px] text-center">
+                            <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{totalQuantity}개</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{selectedBundles}묶음</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => changeShopQuantity(offer.ballKey, selectedBundles + 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between text-sm">
+                        <span className="text-zinc-500 dark:text-zinc-400">합계</span>
+                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{totalPrice}코인</span>
+                      </div>
                     </div>
+
+                    <button
+                      type="button"
+                      disabled={!affordable}
+                      onClick={() => buyOffer(offer.ballKey, totalQuantity, totalPrice, offer.ball.nameKo)}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                    >
+                      {affordable ? '구매하기' : `${totalPrice - coins}코인 부족`}
+                    </button>
                   </div>
                 );
               })}
@@ -644,7 +665,7 @@ export function CatchGame() {
               <MiniStat label="해금 업적" value={`${unlockedAchievementCount}/${achievements.length}`} />
               <MiniStat label="최고 연속" value={`${bestStreak}회`} />
               <MiniStat label="도감 등록" value={`${caughtCount}종`} />
-              <MiniStat label="서비스 볼" value={`${shopStats.premierBonusEarned}개`} />
+              <MiniStat label="상점 구매" value={`${shopStats.purchaseCount}회`} />
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
