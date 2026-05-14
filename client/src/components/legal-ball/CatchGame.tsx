@@ -19,6 +19,7 @@ import {
   getOwnedBalls,
   getPremierBonusForPurchase,
   getShopOffers,
+  SHOP_BUNDLE_STEPS,
   throwBall,
   TYPE_BALL_HINTS,
 } from '@/lib/catch-game';
@@ -59,6 +60,14 @@ type ShopStats = {
   purchaseCount: number;
   purchasedBalls: number;
   premierBonusEarned: number;
+};
+
+type ShopPopup = {
+  ballKey: string;
+  ballName: string;
+  quantity: number;
+  price: number;
+  premierBonus: number;
 };
 
 type AchievementReward = {
@@ -200,6 +209,7 @@ export function CatchGame() {
   const [shopStats, setShopStats] = useState<ShopStats>(defaultShopStats);
   const [typeCatchStats, setTypeCatchStats] = useState<Record<string, number>>({});
   const [shopQuantities, setShopQuantities] = useState<Record<string, number>>({});
+  const [shopPopup, setShopPopup] = useState<ShopPopup | null>(null);
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>([]);
   const [claimedTypeSupplies, setClaimedTypeSupplies] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<GameTab>('home');
@@ -403,7 +413,10 @@ export function CatchGame() {
   }, [collection, encounter, encounterGender, inventory, streak]);
 
   function changeShopQuantity(ballKey: string, nextQuantity: number) {
-    setShopQuantities((prev) => ({ ...prev, [ballKey]: Math.max(1, Math.min(99, nextQuantity)) }));
+    const normalized = SHOP_BUNDLE_STEPS.reduce((closest, step) => {
+      return Math.abs(step - nextQuantity) < Math.abs(closest - nextQuantity) ? step : closest;
+    }, SHOP_BUNDLE_STEPS[0]);
+    setShopQuantities((prev) => ({ ...prev, [ballKey]: normalized }));
   }
 
   function buyOffer(ballKey: string, quantity: number, price: number, ballName: string) {
@@ -422,6 +435,7 @@ export function CatchGame() {
     }));
     setSelectedBall(ballKey);
     setLastShopAction(`${ballName} ${quantity}개 구매 · -${price}코인`);
+    setShopPopup({ ballKey, ballName, quantity, price, premierBonus });
   }
 
   function formatAchievementReward(reward: AchievementReward) {
@@ -499,6 +513,12 @@ export function CatchGame() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [encounter.caught, encounter.escaped, moveBall, nextEncounter, onThrow, selectedBallEntry]);
+
+  useEffect(() => {
+    if (!shopPopup) return;
+    const timer = window.setTimeout(() => setShopPopup(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [shopPopup]);
 
   const achievements: AchievementDefinition[] = [
     { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1, reward: { coins: 80, balls: [{ ballKey: 'poke-ball', count: 3 }] } },
@@ -828,10 +848,13 @@ export function CatchGame() {
             <div className="mt-5 grid grid-cols-3 gap-3">
               {shopOffers.map((offer) => {
                 const owned = inventory[offer.ballKey] ?? 0;
-                const selectedBundles = shopQuantities[offer.ballKey] ?? 1;
+                const selectedBundles = shopQuantities[offer.ballKey] ?? SHOP_BUNDLE_STEPS[0];
                 const totalQuantity = offer.quantity * selectedBundles;
                 const totalPrice = offer.price * selectedBundles;
                 const affordable = coins >= totalPrice;
+                const selectedStepIndex = Math.max(0, SHOP_BUNDLE_STEPS.indexOf(selectedBundles as (typeof SHOP_BUNDLE_STEPS)[number]));
+                const previousStep = SHOP_BUNDLE_STEPS[Math.max(0, selectedStepIndex - 1)];
+                const nextStep = SHOP_BUNDLE_STEPS[Math.min(SHOP_BUNDLE_STEPS.length - 1, selectedStepIndex + 1)];
                 return (
                   <div key={offer.ballKey} className={`rounded-2xl border p-4 ${offer.featured ? 'border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/60'}`}>
                     <div className="flex items-start justify-between gap-3">
@@ -851,19 +874,21 @@ export function CatchGame() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => changeShopQuantity(offer.ballKey, selectedBundles - 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                            onClick={() => changeShopQuantity(offer.ballKey, previousStep)}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200"
+                            disabled={selectedStepIndex === 0}
                           >
                             −
                           </button>
-                          <div className="min-w-[76px] text-center">
+                          <div className="min-w-[88px] text-center">
                             <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{totalQuantity}개</p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{selectedBundles}묶음</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">× {selectedBundles}</p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => changeShopQuantity(offer.ballKey, selectedBundles + 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                            onClick={() => changeShopQuantity(offer.ballKey, nextStep)}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200"
+                            disabled={selectedStepIndex === SHOP_BUNDLE_STEPS.length - 1}
                           >
                             +
                           </button>
@@ -873,6 +898,21 @@ export function CatchGame() {
                       <div className="mt-3 flex items-center justify-between text-sm">
                         <span className="text-zinc-500 dark:text-zinc-400">합계</span>
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">{totalPrice}코인</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {SHOP_BUNDLE_STEPS.map((step) => {
+                          const active = step === selectedBundles;
+                          return (
+                            <button
+                              key={`${offer.ballKey}-${step}`}
+                              type="button"
+                              onClick={() => changeShopQuantity(offer.ballKey, step)}
+                              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${active ? 'bg-emerald-600 text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'}`}
+                            >
+                              ×{step}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -1075,6 +1115,30 @@ export function CatchGame() {
           </section>
         ) : null}
       </div>
+
+      {shopPopup ? (
+        <div className="pointer-events-none fixed inset-x-0 top-6 z-40 flex justify-center px-4">
+          <div className="pointer-events-auto w-full max-w-sm rounded-3xl border border-emerald-300 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-emerald-900 dark:bg-zinc-900/95">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-950/40">
+                <BallIcon ballKey={shopPopup.ballKey} size={28} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">구매 완료</p>
+                <p className="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{shopPopup.ballName} {shopPopup.quantity}개</p>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">-{shopPopup.price}코인{shopPopup.premierBonus > 0 ? ` · 프리미어볼 +${shopPopup.premierBonus}` : ''}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShopPopup(null)}
+                className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-semibold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {bagOpen ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-0 sm:p-4" onClick={() => setBagOpen(false)}>

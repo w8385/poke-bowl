@@ -37,7 +37,7 @@ export type ShopOffer = {
   featured?: boolean;
 };
 
-export const SHOP_BUNDLE_STEPS = [1, 3, 5] as const;
+export const SHOP_BUNDLE_STEPS = [1, 2, 5, 10] as const;
 
 export function getPremierBonusForPurchase(totalBalls: number) {
   return Math.floor(totalBalls / 10);
