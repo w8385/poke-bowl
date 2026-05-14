@@ -963,7 +963,7 @@ export function CatchGame() {
               </div>
 
               <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="grid gap-3 sm:grid-cols-[auto_auto_1fr] sm:items-center">
                   <div>
                     <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">현재 턴</p>
                     <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{encounter.turn}번째 던지기</p>
@@ -972,7 +972,7 @@ export function CatchGame() {
                     <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">이번 탐험</p>
                     <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{regionEncounterCount} / {selectedRegion.maxEncounters}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
                     <button onClick={nextEncounter} disabled={regionRunClosed} className={`rounded-full border px-4 py-2 text-sm font-semibold ${regionRunClosed ? 'cursor-not-allowed border-zinc-200 text-zinc-400 dark:border-zinc-800 dark:text-zinc-500' : 'border-zinc-300 text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100'}`}>
                       새 포켓몬
                     </button>
@@ -1019,7 +1019,18 @@ export function CatchGame() {
             </article>
             ) : null}
 
-            <div className="space-y-6">
+            <div className="space-y-4">
+              <article className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <MiniStat label="점수" value={`${score}점`} />
+                  <MiniStat label="코인" value={`${coins}`} />
+                  <MiniStat label="연속" value={`${bestStreak}회`} />
+                  <div className="hidden sm:block">
+                    <MiniStat label="등록" value={`${caughtCount}종`} />
+                  </div>
+                </div>
+              </article>
+
               <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -1034,26 +1045,26 @@ export function CatchGame() {
                   </button>
                 </div>
 
-                <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-950/60">
+                <div className="mt-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60 sm:mt-6 sm:p-5">
                   {selectedBallEntry ? (
                     <>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-2 sm:gap-3">
                         <button
                           type="button"
                           onClick={() => moveBall(-1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 sm:h-11 sm:w-11 sm:text-xl"
                         >
                           ←
                         </button>
                         <div className="flex flex-1 flex-col items-center text-center">
-                          <div className="rounded-full bg-white p-5 shadow-sm dark:bg-zinc-900">
-                            <BallIcon ballKey={selectedBallEntry.key} size={72} />
+                          <div className="rounded-full bg-white p-4 shadow-sm dark:bg-zinc-900 sm:p-5">
+                            <BallIcon ballKey={selectedBallEntry.key} size={56} />
                           </div>
-                          <div className="mt-4 flex min-h-[72px] flex-col items-center justify-start">
-                            <p className="line-clamp-2 max-w-[180px] text-xl font-bold leading-7 text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
-                            <p className="mt-1 line-clamp-1 max-w-[180px] text-sm text-zinc-500 dark:text-zinc-400">{selectedBallEntry.nameEn}</p>
+                          <div className="mt-3 flex min-h-[56px] flex-col items-center justify-start sm:mt-4 sm:min-h-[72px]">
+                            <p className="line-clamp-2 max-w-[160px] text-lg font-bold leading-6 text-zinc-900 dark:text-zinc-100 sm:max-w-[180px] sm:text-xl sm:leading-7">{selectedBallEntry.nameKo}</p>
+                            <p className="mt-1 line-clamp-1 max-w-[160px] text-xs text-zinc-500 dark:text-zinc-400 sm:max-w-[180px] sm:text-sm">{selectedBallEntry.nameEn}</p>
                           </div>
-                          <div className="mt-3 flex items-center gap-2">
+                          <div className="mt-2 flex items-center gap-2 sm:mt-3">
                             <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
                               x{inventory[selectedBallEntry.key] ?? 0}
                             </span>
@@ -1065,35 +1076,15 @@ export function CatchGame() {
                         <button
                           type="button"
                           onClick={() => moveBall(1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-lg font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 sm:h-11 sm:w-11 sm:text-xl"
                         >
                           →
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                        disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
-                        onClick={() => onThrow(selectedBallEntry.key)}
-                        className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
-                      >
-                        {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
-                      </button>
                     </>
                   ) : (
                     <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 상점에서 재보급하거나 진행을 리셋해 다시 시작할 수 있다.</p>
                   )}
-                </div>
-              </article>
-
-              <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">현재 진행</h3>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                  <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
-                  <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
-                  <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
-                  <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
-                  <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
                 </div>
               </article>
             </div>
@@ -1101,6 +1092,43 @@ export function CatchGame() {
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
               도움말 · ← → 볼 선택 · Z 던지기 · 포획 끝나면 Z로 다음 야생 포켓몬
             </div>
+
+            {!regionRunClosed && selectedBallEntry ? (
+              <div className="sticky bottom-3 z-20 sm:hidden">
+                <div className="rounded-3xl border border-zinc-200 bg-white/95 p-3 shadow-2xl backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBagOpen(true)}
+                      className="inline-flex shrink-0 items-center justify-center rounded-full border border-zinc-300 px-4 py-3 text-sm font-semibold text-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+                    >
+                      가방
+                    </button>
+                    <button
+                      type="button"
+                      disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
+                      onClick={() => onThrow(selectedBallEntry.key)}
+                      className="inline-flex min-w-0 flex-1 items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                    >
+                      {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : `${selectedBallEntry.nameKo} 던지기`}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {!regionRunClosed && selectedBallEntry ? (
+              <div className="hidden sm:block">
+                <button
+                  type="button"
+                  disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
+                  onClick={() => onThrow(selectedBallEntry.key)}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                >
+                  {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
+                </button>
+              </div>
+            ) : null}
           </section>
         ) : null}
 
