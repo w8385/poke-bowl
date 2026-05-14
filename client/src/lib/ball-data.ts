@@ -35,6 +35,7 @@ export type PokemonIndexEntry = {
   generation: number;
   types: string[];
   sprite: string;
+  genderRate: number;
   isLegendary: boolean;
   isMythical: boolean;
 };
@@ -139,6 +140,11 @@ export function getVoteCandidates(item: PokemonDisplayEntry) {
     ballLabel: getBallLabel(ballKey),
     isRecommended: ballKey === item.recommendedBall?.key,
   }));
+}
+
+export function getFemaleRatio(genderRate: number) {
+  if (genderRate < 0) return null;
+  return Math.max(0, Math.min(1, genderRate / 8));
 }
 
 export function getFemaleSpriteUrl(dex: number) {

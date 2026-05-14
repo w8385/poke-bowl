@@ -83,6 +83,7 @@ const entries = species
       generation: Number(row.generation_id),
       types: typeRows.map((item) => typeNameMap.get(item.typeId) ?? item.typeId),
       sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+      genderRate: Number(row.gender_rate),
       isLegendary: row.is_legendary === '1',
       isMythical: row.is_mythical === '1',
     };

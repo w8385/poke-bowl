@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
-import { getBallLabel, getPokemonList, type SpriteGender } from '@/lib/ball-data';
+import { getBallLabel, getFemaleRatio, getPokemonList, type SpriteGender } from '@/lib/ball-data';
 import {
   CatchResult,
   CatchReward,
@@ -104,8 +104,11 @@ function cloneDefaultInventory() {
 }
 
 function getEncounterGender(pokemon: Encounter['pokemon']): CatchGender {
-  if (pokemon.isLegendary || pokemon.isMythical) return 'unknown';
-  return Math.random() < 0.5 ? 'male' : 'female';
+  const femaleRatio = getFemaleRatio(pokemon.genderRate);
+  if (femaleRatio === null) return 'unknown';
+  if (femaleRatio <= 0) return 'male';
+  if (femaleRatio >= 1) return 'female';
+  return Math.random() < femaleRatio ? 'female' : 'male';
 }
 
 function createCollectionEntry(ballKey: string, gender: CatchGender): CollectionEntry {
