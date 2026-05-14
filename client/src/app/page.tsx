@@ -106,9 +106,9 @@ export default function Home() {
             현재 추천/투표 후보에 쓰는 볼 목록을 정식 스프라이트 계열로 통일해 정리했다.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {featuredBalls.map((ball) => (
-            <BallChip key={ball.key} ballKey={ball.key} />
+            <BallChip key={ball.key} ballKey={ball.key} className="w-full justify-center" />
           ))}
         </div>
       </section>

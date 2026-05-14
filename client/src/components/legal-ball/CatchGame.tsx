@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type WheelEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
@@ -196,7 +196,6 @@ export function CatchGame() {
   const [activeTab, setActiveTab] = useState<GameTab>('home');
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
-  const bagScrollRef = useRef<HTMLDivElement | null>(null);
 
   const ownedBalls = useMemo(() => getOwnedBalls(inventory), [inventory]);
   const shopOffers = useMemo(() => getShopOffers(), []);
@@ -414,14 +413,6 @@ export function CatchGame() {
     }));
     setSelectedBall(ballKey);
     setLastShopAction(`${ballName} ${quantity}개 구매 · -${price}코인`);
-  }
-
-  function handleBagWheel(event: WheelEvent<HTMLDivElement>) {
-    const el = bagScrollRef.current;
-    if (!el) return;
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) && event.deltaX === 0) return;
-    event.preventDefault();
-    el.scrollLeft += Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
   }
 
   function formatAchievementReward(reward: AchievementReward) {
@@ -818,7 +809,7 @@ export function CatchGame() {
               </div>
             ) : null}
 
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-5 grid grid-cols-3 gap-3">
               {shopOffers.map((offer) => {
                 const owned = inventory[offer.ballKey] ?? 0;
                 const selectedBundles = shopQuantities[offer.ballKey] ?? 1;
@@ -1043,50 +1034,32 @@ export function CatchGame() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">볼 가방</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">스크롤하거나 넘겨서 고른 뒤, 선택하면 바로 닫힌다.</p>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">27개 볼을 3열로 보고, 고르면 바로 닫힌다.</p>
               </div>
               <button onClick={() => setBagOpen(false)} className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
                 닫기
               </button>
             </div>
 
-            <div className="mt-5 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => moveBall(-1)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 dark:border-zinc-700 dark:text-zinc-200"
-              >
-                ←
-              </button>
-              <div ref={bagScrollRef} onWheel={handleBagWheel} className="flex-1 overflow-x-auto overscroll-contain">
-                <div className="flex min-w-max gap-3 pb-2">
-                  {ownedBalls.map((ball) => {
-                    const active = selectedBall === ball.key;
-                    return (
-                      <button
-                        key={ball.key}
-                        type="button"
-                        onClick={() => {
-                          setSelectedBall(ball.key);
-                          setBagOpen(false);
-                        }}
-                        className={`flex w-32 shrink-0 flex-col items-center rounded-2xl border p-3 text-center transition ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900'}`}
-                      >
-                        <BallIcon ballKey={ball.key} size={36} />
-                        <p className="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{ball.nameKo}</p>
-                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">x{inventory[ball.key] ?? 0}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => moveBall(1)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 dark:border-zinc-700 dark:text-zinc-200"
-              >
-                →
-              </button>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {ownedBalls.map((ball) => {
+                const active = selectedBall === ball.key;
+                return (
+                  <button
+                    key={ball.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedBall(ball.key);
+                      setBagOpen(false);
+                    }}
+                    className={`flex min-h-32 flex-col items-center justify-center rounded-2xl border p-3 text-center transition ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900'}`}
+                  >
+                    <BallIcon ballKey={ball.key} size={36} />
+                    <p className="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{ball.nameKo}</p>
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">x{inventory[ball.key] ?? 0}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -103,30 +103,35 @@ export function VotePanel({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid grid-cols-3 gap-3">
         {candidates.map((item) => {
           const count = votes.find((vote) => vote.ballKey === item.ballKey)?.count ?? 0;
           const percentage = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
           const isMine = myVote === item.ballKey;
 
           return (
-            <label key={item.ballKey} className="block rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-700">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+            <label key={item.ballKey} className="block rounded-xl border border-zinc-200 px-3 py-3 dark:border-zinc-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-3">
                   <input
                     type="radio"
                     name="vote-ball"
                     checked={selected === item.ballKey}
                     onChange={() => setSelected(item.ballKey)}
                   />
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex min-w-0 flex-col gap-2">
                     <BallIcon ballKey={item.ballKey} size={20} />
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.ballLabel}</span>
-                    {item.isRecommended ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">대표 추천</span> : null}
-                    {isMine ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-950 dark:text-sky-200">내 투표</span> : null}
+                    <div className="flex flex-wrap gap-1">
+                      {item.isRecommended ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">대표 추천</span> : null}
+                      {isMine ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800 dark:bg-sky-950 dark:text-sky-200">내 투표</span> : null}
+                    </div>
                   </div>
                 </div>
                 <span className="text-sm text-zinc-600 dark:text-zinc-300">{loading ? '-' : `${count}표 · ${percentage}%`}</span>
+              </div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                {loading ? '집계 중' : `득표 ${count} · ${percentage}%`}
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                 <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percentage}%` }} />
