@@ -581,13 +581,15 @@ export function CatchGame() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-5">
-          <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
-          <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
-          <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
-          <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
-          <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
-        </section>
+        {activeTab !== 'catch' ? (
+          <section className="grid gap-4 md:grid-cols-5">
+            <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
+            <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
+            <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
+            <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
+            <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
+          </section>
+        ) : null}
 
         {activeTab === 'home' ? (
           <section className="grid gap-6 lg:grid-cols-2">
@@ -632,7 +634,7 @@ export function CatchGame() {
         ) : null}
 
         {activeTab === 'catch' ? (
-          <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <section className="space-y-6">
             <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -709,73 +711,86 @@ export function CatchGame() {
               </div>
             </article>
 
-            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBagOpen(true)}
+                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
+                  >
+                    가방 열기
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setBagOpen(true)}
-                  className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
-                >
-                  가방 열기
-                </button>
-              </div>
 
-              <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-950/60">
-                {selectedBallEntry ? (
-                  <>
-                    <div className="flex items-center justify-between gap-3">
-                      <button
-                        type="button"
-                        onClick={() => moveBall(-1)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
-                      >
-                        ←
-                      </button>
-                      <div className="flex flex-1 flex-col items-center text-center">
-                        <div className="rounded-full bg-white p-5 shadow-sm dark:bg-zinc-900">
-                          <BallIcon ballKey={selectedBallEntry.key} size={72} />
+                <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-950/60">
+                  {selectedBallEntry ? (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          type="button"
+                          onClick={() => moveBall(-1)}
+                          className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                        >
+                          ←
+                        </button>
+                        <div className="flex flex-1 flex-col items-center text-center">
+                          <div className="rounded-full bg-white p-5 shadow-sm dark:bg-zinc-900">
+                            <BallIcon ballKey={selectedBallEntry.key} size={72} />
+                          </div>
+                          <div className="mt-4 flex min-h-[72px] flex-col items-center justify-start">
+                            <p className="line-clamp-2 max-w-[180px] text-xl font-bold leading-7 text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
+                            <p className="mt-1 line-clamp-1 max-w-[180px] text-sm text-zinc-500 dark:text-zinc-400">{selectedBallEntry.nameEn}</p>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                              x{inventory[selectedBallEntry.key] ?? 0}
+                            </span>
+                            <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                              {selectedBallIndex + 1} / {ownedBalls.length}
+                            </span>
+                          </div>
                         </div>
-                        <div className="mt-4 flex min-h-[72px] flex-col items-center justify-start">
-                          <p className="line-clamp-2 max-w-[180px] text-xl font-bold leading-7 text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
-                          <p className="mt-1 line-clamp-1 max-w-[180px] text-sm text-zinc-500 dark:text-zinc-400">{selectedBallEntry.nameEn}</p>
-                        </div>
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-                            x{inventory[selectedBallEntry.key] ?? 0}
-                          </span>
-                          <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                            {selectedBallIndex + 1} / {ownedBalls.length}
-                          </span>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => moveBall(1)}
+                          className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                        >
+                          →
+                        </button>
                       </div>
+
                       <button
                         type="button"
-                        onClick={() => moveBall(1)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                        disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
+                        onClick={() => onThrow(selectedBallEntry.key)}
+                        className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
                       >
-                        →
+                        {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
                       </button>
-                    </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 상점에서 재보급하거나 진행을 리셋해 다시 시작할 수 있다.</p>
+                  )}
+                </div>
+              </article>
 
-                    <button
-                      type="button"
-                      disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
-                      onClick={() => onThrow(selectedBallEntry.key)}
-                      className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
-                    >
-                      {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 상점에서 재보급하거나 진행을 리셋해 다시 시작할 수 있다.</p>
-                )}
-              </div>
-            </article>
+              <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">현재 진행</h3>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                  <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
+                  <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
+                  <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
+                  <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
+                  <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
+                </div>
+              </article>
+            </div>
 
-            <div className="lg:col-span-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
               도움말 · ← → 볼 선택 · Z 던지기 · 포획 끝나면 Z로 다음 야생 포켓몬 · 가방에서 볼 선택 시 바로 닫힘
             </div>
           </section>
