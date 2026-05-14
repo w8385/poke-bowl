@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 
 import { PokemonCard } from '@/components/legal-ball/PokemonCard';
+import { useLocale } from '@/hooks/useLocale';
 import { PokemonDisplayEntry, getAvailableGenerations, getAvailableTypes, getBallLabel, getLegalityLabel } from '@/lib/ball-data';
+import { formatGenerationLabel } from '@/lib/locale';
 
 const INITIAL_LIMIT = 60;
 
@@ -24,6 +26,7 @@ function matches(item: PokemonDisplayEntry, query: string) {
 }
 
 export function SearchInput({ items, initialGeneration = 'all' }: { items: PokemonDisplayEntry[]; initialGeneration?: string }) {
+  const locale = useLocale();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [generationFilter, setGenerationFilter] = useState(initialGeneration);
@@ -73,7 +76,7 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
               <option value="all">전체 세대</option>
               {generations.map((generation) => (
                 <option key={generation} value={generation}>
-                  Gen {generation}
+                  {formatGenerationLabel(locale, generation)}
                 </option>
               ))}
             </select>
@@ -122,7 +125,7 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
         </p>
         <div className="flex flex-wrap gap-2">
           {query ? <p>검색어: {query}</p> : <p>기본 목록</p>}
-          {generationFilter !== 'all' ? <p>세대: Gen {generationFilter}</p> : null}
+          {generationFilter !== 'all' ? <p>세대: {formatGenerationLabel(locale, generationFilter)}</p> : null}
           {typeFilter !== 'all' ? <p>타입: {typeFilter}</p> : null}
           {legalityFilter !== 'all' ? <p>합법성: {getLegalityLabel(legalityFilter as PokemonDisplayEntry['legality']['status'])}</p> : null}
         </div>

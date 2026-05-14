@@ -1,12 +1,18 @@
+'use client';
+
 import Link from 'next/link';
 
 import { BallChip } from '@/components/legal-ball/BallChip';
+import { useLocale } from '@/hooks/useLocale';
 import { getBallCatalog, getGenerationCounts } from '@/lib/ball-data';
+import { formatGenerationLabel, formatGenerationRange, getGenerationWord } from '@/lib/locale';
 
 const generationCards = getGenerationCounts();
 const featuredBalls = getBallCatalog();
 
 export default function Home() {
+  const locale = useLocale();
+
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-12 text-zinc-900 sm:px-10 dark:text-zinc-100">
       <section className="space-y-4">
@@ -117,7 +123,7 @@ export default function Home() {
         <div>
           <h2 className="text-2xl font-semibold">세대별 브라우징</h2>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-            구글 시트의 Gen 1~9 탭 구조를 기준으로 세대별 탐색 흐름을 먼저 맞춘다.
+            구글 시트의 {formatGenerationRange(locale, 1, 9)} 탭 구조를 기준으로 세대별 탐색 흐름을 먼저 맞춘다.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -127,8 +133,8 @@ export default function Home() {
               href={`/pokemon?generation=${item.generation}`}
               className="rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-emerald-300 hover:shadow dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500"
             >
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Generation</p>
-              <h3 className="mt-2 text-2xl font-semibold">Gen {item.generation}</h3>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{getGenerationWord(locale)}</p>
+              <h3 className="mt-2 text-2xl font-semibold">{formatGenerationLabel(locale, item.generation)}</h3>
               <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{item.count}마리 탐색 가능</p>
             </Link>
           ))}

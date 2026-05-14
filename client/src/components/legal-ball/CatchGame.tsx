@@ -5,7 +5,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
+import { useLocale } from '@/hooks/useLocale';
 import { getBallLabel, getFemaleRatio, getPokemonList, type SpriteGender } from '@/lib/ball-data';
+import { formatGenerationLabel } from '@/lib/locale';
 import {
   CatchResult,
   CatchReward,
@@ -180,6 +182,7 @@ const TABS: { id: GameTab; label: string }[] = [
 ];
 
 export function CatchGame() {
+  const locale = useLocale();
   const [inventory, setInventory] = useState<Inventory>(cloneDefaultInventory);
   const [score, setScore] = useState(0);
   const [coins, setCoins] = useState(0);
@@ -642,7 +645,7 @@ export function CatchGame() {
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${encounterBadge.tone}`}>{encounterBadge.label}</span>
                     <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                      #{encounter.pokemon.dex} · {genderLabel(encounterGender)} · Gen {encounter.pokemon.generation} · {encounter.pokemon.types.join(' / ')}
+                      #{encounter.pokemon.dex} · {genderLabel(encounterGender)} · {formatGenerationLabel(locale, encounter.pokemon.generation)} · {encounter.pokemon.types.join(' / ')}
                     </p>
                   </div>
                 </div>

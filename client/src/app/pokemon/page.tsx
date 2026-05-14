@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { GenerationLabel } from '@/components/GenerationLabel';
 import { SearchInput } from '@/components/legal-ball/SearchInput';
 import { getPokemonList } from '@/lib/ball-data';
 
@@ -29,7 +30,7 @@ export default async function PokemonListPage({
           <p className="mt-2 text-sm leading-6 text-zinc-700 sm:text-base dark:text-zinc-300">
             전체 포켓몬을 먼저 탐색하고, 세대별/타입별로 좁혀서 운영자 추천과 유저 투표를 함께 본다.
           </p>
-          {generation ? <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">현재 진입: Gen {generation}</p> : null}
+          {generation ? <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">현재 진입: <GenerationLabel generation={generation} /></p> : null}
         </div>
       </header>
 
