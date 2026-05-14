@@ -23,16 +23,16 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
+              href="/pokemon"
+              className="inline-flex items-center rounded-full bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
+            >
+              볼맞춤 통계 보러 가기
+            </Link>
+            <Link
               href="/play"
               className="inline-flex items-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               미니게임 시작
-            </Link>
-            <Link
-              href="/pokemon"
-              className="inline-flex items-center rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100 dark:hover:border-zinc-500"
-            >
-              전체 포켓몬 보기
             </Link>
             <Link
               href="/about"
@@ -42,6 +42,46 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Link
+          href="/pokemon"
+          className="rounded-3xl border border-sky-200 bg-sky-50 p-6 transition hover:border-sky-300 hover:shadow dark:border-sky-900 dark:bg-sky-950/30 dark:hover:border-sky-700"
+        >
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Core feature · Archive</p>
+          <h2 className="mt-3 text-2xl font-bold text-sky-950 dark:text-sky-100">볼맞춤 통계 / 추천 탐색</h2>
+          <p className="mt-3 text-sm leading-6 text-sky-900/80 dark:text-sky-100/80">
+            포켓몬별 추천 볼, 대체 후보, 유저 투표 흐름을 보고 세대별로 탐색하는 메인 아카이브 영역.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-sky-800 dark:text-sky-200">
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-sky-900/60">전체 포켓몬 탐색</span>
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-sky-900/60">추천/투표 확인</span>
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-sky-900/60">세대별 브라우징</span>
+          </div>
+          <div className="mt-6 inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white">
+            통계 보러 가기
+          </div>
+        </Link>
+
+        <Link
+          href="/play"
+          className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 transition hover:border-emerald-300 hover:shadow dark:border-emerald-900 dark:bg-emerald-950/30 dark:hover:border-emerald-700"
+        >
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Core feature · Game</p>
+          <h2 className="mt-3 text-2xl font-bold text-emerald-950 dark:text-emerald-100">포획 미니게임 / 수집 루프</h2>
+          <p className="mt-3 text-sm leading-6 text-emerald-900/80 dark:text-emerald-100/80">
+            볼을 쓰고 코인을 모으고, 도감과 업적을 키우면서 타입별 보급 보상까지 챙기는 플레이 영역.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-emerald-800 dark:text-emerald-200">
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-emerald-900/60">잡기 / 상점 / 도감</span>
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-emerald-900/60">업적 / 타입 보급</span>
+            <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-emerald-900/60">볼 수집 플레이</span>
+          </div>
+          <div className="mt-6 inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+            미니게임 하러 가기
+          </div>
+        </Link>
       </section>
 
       <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900">
