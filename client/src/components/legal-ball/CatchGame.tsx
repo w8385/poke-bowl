@@ -311,7 +311,7 @@ export function CatchGame() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={nextEncounter} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+              <button onClick={() => setActiveTab('catch')} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
                 바로 잡기 시작
               </button>
               <button onClick={resetRun} className="rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 dark:border-rose-900 dark:text-rose-200">
