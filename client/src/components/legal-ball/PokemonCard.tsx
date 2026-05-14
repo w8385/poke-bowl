@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
 import { PokemonDisplayEntry, getBallLabel, getLegalityLabel } from '@/lib/ball-data';
 
@@ -12,7 +13,7 @@ export function PokemonCard({ item }: { item: PokemonDisplayEntry }) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-800/80">
-            <img src={item.sprite} alt={item.name.en} className="h-16 w-16" loading="lazy" style={{ imageRendering: 'pixelated' }} />
+            <PokemonSprite dex={item.dex} baseSprite={item.sprite} gender="unknown" name={item.name.en} size={64} className="h-16 w-16" />
           </div>
           <div>
             <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">#{item.dex}</p>

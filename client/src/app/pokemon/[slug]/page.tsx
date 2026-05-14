@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { auth } from '@/auth';
+import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { VotePanel } from '@/components/legal-ball/VotePanel';
 import { findPokemonBySlug, getLegalityLabel } from '@/lib/ball-data';
@@ -25,7 +26,7 @@ export default async function PokemonDetailPage({
         </Link>
         <div className="flex flex-wrap items-center gap-5">
           <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-zinc-50 dark:bg-zinc-800/80">
-            <img src={item.sprite} alt={item.name.en} className="h-24 w-24" style={{ imageRendering: 'pixelated' }} />
+            <PokemonSprite dex={item.dex} baseSprite={item.sprite} gender="unknown" name={item.name.en} size={96} className="h-24 w-24" />
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">#{item.dex}</p>

@@ -39,6 +39,8 @@ export type PokemonIndexEntry = {
   isMythical: boolean;
 };
 
+export type SpriteGender = 'male' | 'female' | 'unknown';
+
 export type BallCatalogEntry = {
   key: string;
   nameKo: string;
@@ -137,6 +139,15 @@ export function getVoteCandidates(item: PokemonDisplayEntry) {
     ballLabel: getBallLabel(ballKey),
     isRecommended: ballKey === item.recommendedBall?.key,
   }));
+}
+
+export function getFemaleSpriteUrl(dex: number) {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/${dex}.png`;
+}
+
+export function getSpriteForGender(pokemon: Pick<PokemonIndexEntry, 'dex' | 'sprite'>, gender: SpriteGender) {
+  if (gender === 'female') return getFemaleSpriteUrl(pokemon.dex);
+  return pokemon.sprite;
 }
 
 export function getLegalityLabel(status: PokemonDisplayEntry['legality']['status']) {

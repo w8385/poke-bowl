@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
-import { getBallLabel, getPokemonList } from '@/lib/ball-data';
+import { getBallLabel, getPokemonList, type SpriteGender } from '@/lib/ball-data';
 import {
   CatchResult,
   CatchReward,
@@ -22,11 +23,13 @@ import {
 
 const STORAGE_KEY = 'poke-bowl-catch-game-v2';
 const LEGACY_STORAGE_KEY = 'poke-bowl-catch-game-v1';
-const pokemonNameMap = new Map(getPokemonList().map((item) => [item.slug, item.name.ko || item.name.en]));
+const allPokemon = getPokemonList();
+const pokemonNameMap = new Map(allPokemon.map((item) => [item.slug, item.name.ko || item.name.en]));
+const pokemonDataMap = new Map(allPokemon.map((item) => [item.slug, item]));
 
 type GameTab = 'home' | 'catch' | 'shop' | 'dex' | 'achievements';
 
-type CatchGender = 'male' | 'female' | 'unknown';
+type CatchGender = SpriteGender;
 
 type CatchRecord = {
   encounterId: string;
@@ -641,7 +644,14 @@ export function CatchGame() {
                   </div>
                 </div>
                 <div className="rounded-3xl bg-zinc-50 p-3 dark:bg-zinc-800/80">
-                  <img src={encounter.pokemon.sprite} alt={encounter.pokemon.name.en} className="h-28 w-28" style={{ imageRendering: 'pixelated' }} />
+                  <PokemonSprite
+                    dex={encounter.pokemon.dex}
+                    baseSprite={encounter.pokemon.sprite}
+                    gender={encounterGender}
+                    name={encounter.pokemon.name.en}
+                    size={112}
+                    className="h-28 w-28"
+                  />
                 </div>
               </div>
 
@@ -895,6 +905,26 @@ export function CatchGame() {
                       <BallIcon ballKey={entry.firstBallKey} size={20} />
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
+                      {entry.genderCounts.male > 0 ? (
+                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          <PokemonSprite dex={pokemonDataMap.get(slug)?.dex ?? 0} baseSprite={pokemonDataMap.get(slug)?.sprite ?? ''} gender="male" name={pokemonNameMap.get(slug) ?? slug} size={18} className="h-[18px] w-[18px]" />
+                          ♂ x{entry.genderCounts.male}
+                        </div>
+                      ) : null}
+                      {entry.genderCounts.female > 0 ? (
+                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          <PokemonSprite dex={pokemonDataMap.get(slug)?.dex ?? 0} baseSprite={pokemonDataMap.get(slug)?.sprite ?? ''} gender="female" name={pokemonNameMap.get(slug) ?? slug} size={18} className="h-[18px] w-[18px]" />
+                          ♀ x{entry.genderCounts.female}
+                        </div>
+                      ) : null}
+                      {entry.genderCounts.unknown > 0 ? (
+                        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          <PokemonSprite dex={pokemonDataMap.get(slug)?.dex ?? 0} baseSprite={pokemonDataMap.get(slug)?.sprite ?? ''} gender="unknown" name={pokemonNameMap.get(slug) ?? slug} size={18} className="h-[18px] w-[18px]" />
+                          — x{entry.genderCounts.unknown}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {entry.caughtBalls.map((ballKey) => (
                         <span key={`${slug}-${ballKey}`} className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                           <BallIcon ballKey={ballKey} size={14} />
@@ -912,9 +942,21 @@ export function CatchGame() {
               <div className="mt-4 space-y-3">
                 {history.length ? history.map((item) => (
                   <div key={`${item.encounterId}-${item.ballKey}-${item.createdAt}`} className="flex items-center justify-between gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name} {genderLabel(item.gender)}</p>
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.success ? '포획 성공' : '포획 실패'} · {item.title}</p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="rounded-2xl bg-white p-2 dark:bg-zinc-900">
+                        <PokemonSprite
+                          dex={item.dex}
+                          baseSprite={pokemonDataMap.get(item.slug)?.sprite ?? ''}
+                          gender={item.gender}
+                          name={item.name}
+                          size={32}
+                          className="h-8 w-8"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name} {genderLabel(item.gender)}</p>
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.success ? '포획 성공' : '포획 실패'} · {item.title}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">+{item.coins}코인</span>
