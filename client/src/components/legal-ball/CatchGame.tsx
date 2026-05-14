@@ -9,12 +9,14 @@ import { useLocale } from '@/hooks/useLocale';
 import { getBallLabel, getFemaleRatio, getPokemonList, type SpriteGender } from '@/lib/ball-data';
 import { formatGenerationLabel } from '@/lib/locale';
 import {
+  ADVENTURE_REGIONS,
   CatchResult,
   CatchReward,
   DEFAULT_INVENTORY,
   Encounter,
   Inventory,
   createEncounter,
+  getAdventureRegions,
   getCatchReward,
   getOwnedBalls,
   getPremierBonusForPurchase,
@@ -111,6 +113,7 @@ type SavedState = {
   claimedAchievements?: string[];
   claimedTypeSupplies?: string[];
   activeTab?: GameTab;
+  selectedRegionId?: string;
 };
 
 function cloneDefaultInventory() {
@@ -217,7 +220,8 @@ export function CatchGame() {
   const [bestStreak, setBestStreak] = useState(0);
   const [collection, setCollection] = useState<Record<string, CollectionEntry>>({});
   const [history, setHistory] = useState<CatchRecord[]>([]);
-  const [encounter, setEncounter] = useState<Encounter>(() => createEncounter());
+  const [selectedRegionId, setSelectedRegionId] = useState<string>(ADVENTURE_REGIONS[0].id);
+  const [encounter, setEncounter] = useState<Encounter>(() => createEncounter(ADVENTURE_REGIONS[0].id));
   const [selectedBall, setSelectedBall] = useState('poke-ball');
   const [lastResult, setLastResult] = useState<CatchResult | null>(null);
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
@@ -236,6 +240,7 @@ export function CatchGame() {
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
 
+  const regions = useMemo(() => getAdventureRegions(), []);
   const ownedBalls = useMemo(() => getOwnedBalls(inventory), [inventory]);
   const shopOffers = useMemo(() => getShopOffers(), []);
   const totalBalls = useMemo(() => Object.values(inventory).reduce((sum, count) => sum + count, 0), [inventory]);
@@ -271,6 +276,9 @@ export function CatchGame() {
   const selectedDexPokemon = dexModal ? pokemonDataMap.get(dexModal.slug) ?? null : null;
   const selectedDexEntry = dexModal ? collection[dexModal.slug] ?? null : null;
   const activeDexGeneration = pokemonByGeneration.find((entry) => entry.generation === selectedDexGeneration) ?? pokemonByGeneration[0];
+  const selectedRegion = regions.find((region) => region.id === selectedRegionId) ?? regions[0];
+  const selectedRegionCaught = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation && collection[pokemon.slug]).length, [collection, selectedRegion]);
+  const selectedRegionTotal = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation).length, [selectedRegion]);
   const encounterBadge = encounter.pokemon.isMythical
     ? { label: 'MYTHICAL', tone: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-200' }
     : encounter.pokemon.isLegendary
@@ -291,7 +299,9 @@ export function CatchGame() {
         setBestStreak(saved.bestStreak ?? saved.streak ?? 0);
         setCollection(normalizeCollection(saved.collection));
         setHistory(saved.history ?? []);
-        setEncounter(saved.encounter ?? createEncounter());
+        const restoredRegionId = saved.selectedRegionId ?? ADVENTURE_REGIONS[0].id;
+        setSelectedRegionId(restoredRegionId);
+        setEncounter(saved.encounter ?? createEncounter(restoredRegionId));
         setShopStats(saved.shopStats ?? defaultShopStats());
         setTypeCatchStats(normalizeTypeCatchStats(saved.typeCatchStats));
         setClaimedAchievements(saved.claimedAchievements ?? []);
@@ -321,9 +331,10 @@ export function CatchGame() {
       claimedAchievements,
       claimedTypeSupplies,
       activeTab,
+      selectedRegionId,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, typeCatchStats, claimedAchievements, claimedTypeSupplies, activeTab]);
+  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, typeCatchStats, claimedAchievements, claimedTypeSupplies, activeTab, selectedRegionId]);
 
   useEffect(() => {
     if ((inventory[selectedBall] ?? 0) > 0) return;
@@ -335,12 +346,19 @@ export function CatchGame() {
     setInventory((prev) => ({ ...prev, [ballKey]: Math.max(0, (prev[ballKey] ?? 0) - 1) }));
   }
 
+  function selectRegion(regionId: string) {
+    setSelectedRegionId(regionId);
+    setEncounter(createEncounter(regionId));
+    setLastResult(null);
+    setLastReward(null);
+  }
+
   const nextEncounter = useCallback(() => {
-    setEncounter(createEncounter());
+    setEncounter(createEncounter(selectedRegionId));
     setLastResult(null);
     setLastReward(null);
     setActiveTab('catch');
-  }, []);
+  }, [selectedRegionId]);
 
   function resetRun() {
     setInventory(cloneDefaultInventory());
@@ -350,7 +368,8 @@ export function CatchGame() {
     setBestStreak(0);
     setCollection({});
     setHistory([]);
-    setEncounter(createEncounter());
+    setSelectedRegionId(ADVENTURE_REGIONS[0].id);
+    setEncounter(createEncounter(ADVENTURE_REGIONS[0].id));
     setLastResult(null);
     setLastReward(null);
     setLastShopAction(null);
@@ -646,15 +665,55 @@ export function CatchGame() {
         ) : null}
 
         {activeTab === 'home' ? (
-          <section className="grid gap-6 lg:grid-cols-2">
+          <section className="space-y-6">
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">지방 선택</h3>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">모험할 지방을 고르면 그 지방 포켓몬만 야생에서 만난다.</p>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                  현재 지방 {selectedRegion.name.ko} · {selectedRegionCaught}/{selectedRegionTotal} 등록
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+                {regions.map((region) => {
+                  const active = region.id === selectedRegionId;
+                  const regionCaught = allPokemon.filter((pokemon) => pokemon.generation === region.generation && collection[pokemon.slug]).length;
+                  const regionTotal = allPokemon.filter((pokemon) => pokemon.generation === region.generation).length;
+                  return (
+                    <button
+                      key={`region-${region.id}`}
+                      type="button"
+                      onClick={() => selectRegion(region.id)}
+                      className={`rounded-3xl border p-4 text-left transition ${active ? 'border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">Gen {region.generation}</p>
+                          <p className="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{region.name.ko}</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{region.name.en}</p>
+                        </div>
+                        {active ? <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">현재</span> : null}
+                      </div>
+                      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{region.summary}</p>
+                      <p className="mt-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">도감 {regionCaught}/{regionTotal}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
+
+            <section className="grid gap-6 lg:grid-cols-2">
             <HubCard
               title="잡기"
-              desc="지금 들고 있는 볼로 야생 포켓몬을 만나고, 점수와 코인을 벌어온다."
+              desc={`${selectedRegion.name.ko} 지방에서만 야생 포켓몬을 만나고, 점수와 코인을 벌어온다.`}
               actionLabel="포획하러 가기"
               onAction={() => setActiveTab('catch')}
               tone="emerald"
             >
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">현재 선택 볼: {selectedBallEntry?.nameKo ?? '없음'} · 남은 볼 {totalBalls}개</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">현재 지방: {selectedRegion.name.ko} · 현재 선택 볼: {selectedBallEntry?.nameKo ?? '없음'} · 남은 볼 {totalBalls}개</p>
             </HubCard>
             <HubCard
               title="상점"
@@ -667,7 +726,7 @@ export function CatchGame() {
             </HubCard>
             <HubCard
               title="도감"
-              desc="잡은 포켓몬과 어떤 볼로 등록했는지 한눈에 본다."
+              desc="지방별로 잡은 포켓몬을 진짜 도감처럼 모으고 상세 정보를 확인한다."
               actionLabel="도감 보기"
               onAction={() => setActiveTab('dex')}
               tone="sky"
@@ -684,6 +743,7 @@ export function CatchGame() {
               <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length} · 업적 대기 {claimableAchievementCount}개 · 타입 보급 대기 {claimableTypeSupplyCount}개</p>
               {topTypeEntry ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">현재 가장 많이 잡은 타입: {topTypeEntry[0]} {topTypeEntry[1]}회</p> : null}
             </HubCard>
+            </section>
           </section>
         ) : null}
 
@@ -693,6 +753,7 @@ export function CatchGame() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Wild encounter</p>
+                  <p className="mt-2 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800 dark:bg-sky-950 dark:text-sky-200">현재 탐험 지역 · {selectedRegion.name.ko}</p>
                   <h3 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
                     야생의 {encounter.pokemon.name.ko || encounter.pokemon.name.en} 등장!
                   </h3>

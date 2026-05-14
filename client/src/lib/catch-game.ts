@@ -37,14 +37,36 @@ export type ShopOffer = {
   featured?: boolean;
 };
 
+export type AdventureRegion = {
+  id: string;
+  generation: number;
+  name: {
+    ko: string;
+    en: string;
+  };
+  theme: string;
+  summary: string;
+};
+
 export const SHOP_BUNDLE_STEPS = [1, 2, 5, 10] as const;
+
+export const ADVENTURE_REGIONS: AdventureRegion[] = [
+  { id: 'kanto', generation: 1, name: { ko: '관동', en: 'Kanto' }, theme: 'starter', summary: '첫 모험의 시작점. 초반 포켓몬과 관동 대표 종이 등장한다.' },
+  { id: 'johto', generation: 2, name: { ko: '성도', en: 'Johto' }, theme: 'heritage', summary: '전통과 숲, 탑의 분위기를 가진 성도 포켓몬을 만난다.' },
+  { id: 'hoenn', generation: 3, name: { ko: '호연', en: 'Hoenn' }, theme: 'sea', summary: '바다와 화산, 열대 분위기의 호연 포켓몬을 수집한다.' },
+  { id: 'sinnoh', generation: 4, name: { ko: '신오', en: 'Sinnoh' }, theme: 'mountain', summary: '설산과 신화 이미지의 신오 포켓몬 위주로 조우한다.' },
+  { id: 'unova', generation: 5, name: { ko: '하나', en: 'Unova' }, theme: 'urban', summary: '도시와 다리, 개성 강한 하나 포켓몬이 등장한다.' },
+  { id: 'kalos', generation: 6, name: { ko: '칼로스', en: 'Kalos' }, theme: 'style', summary: '우아한 분위기와 페어리 감성이 강한 칼로스 지역이다.' },
+  { id: 'alola', generation: 7, name: { ko: '알로라', en: 'Alola' }, theme: 'island', summary: '섬 순례 감성으로 알로라 포켓몬만 포획할 수 있다.' },
+  { id: 'galar', generation: 8, name: { ko: '가라르', en: 'Galar' }, theme: 'stadium', summary: '스타디움과 와일드에어리어 감성의 가라르 지역이다.' },
+  { id: 'paldea', generation: 9, name: { ko: '팔데아', en: 'Paldea' }, theme: 'openworld', summary: '자유 탐험 느낌으로 팔데아 포켓몬만 만날 수 있다.' },
+];
 
 export function getPremierBonusForPurchase(totalBalls: number) {
   return Math.floor(totalBalls / 10);
 }
 
 const allPokemon = getPokemonList();
-const curatedPokemon = allPokemon.filter((item) => item.curated);
 const allBalls = getBallCatalog();
 
 export const TYPE_BALL_HINTS: Record<string, string[]> = {
@@ -169,8 +191,18 @@ export function getShopOffers() {
   })).sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || a.price - b.price || a.ball.sortOrder - b.ball.sortOrder);
 }
 
-export function createEncounter(): Encounter {
-  const pool = Math.random() < 0.6 ? curatedPokemon : allPokemon;
+export function getAdventureRegions() {
+  return ADVENTURE_REGIONS;
+}
+
+export function getPokemonPoolForRegion(regionId: string) {
+  const region = ADVENTURE_REGIONS.find((item) => item.id === regionId) ?? ADVENTURE_REGIONS[0];
+  const pool = allPokemon.filter((pokemon) => pokemon.generation === region.generation);
+  return pool.length ? pool : allPokemon;
+}
+
+export function createEncounter(regionId?: string): Encounter {
+  const pool = regionId ? getPokemonPoolForRegion(regionId) : allPokemon;
   const pokemon = pool[Math.floor(Math.random() * pool.length)];
   return {
     id: `${pokemon.slug}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
