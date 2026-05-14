@@ -36,6 +36,7 @@ export default function RootLayout({
                 POKÉ BOWL
               </Link>
               <nav className="hidden items-center gap-4 md:flex">
+                <Link href="/stats" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">통계</Link>
                 <Link href="/pokemon" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">도감</Link>
                 <Link href="/play" className="text-sm font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200">미니게임</Link>
               </nav>
