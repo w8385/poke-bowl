@@ -103,7 +103,7 @@ export function VotePanel({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {candidates.map((item) => {
           const count = votes.find((vote) => vote.ballKey === item.ballKey)?.count ?? 0;
           const percentage = totalVotes ? Math.round((count / totalVotes) * 100) : 0;

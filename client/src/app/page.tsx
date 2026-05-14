@@ -67,7 +67,7 @@ export default function Home() {
         <div>
           <h2 className="text-2xl font-semibold">지원 볼 27종</h2>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {featuredBalls.map((ball) => (
             <BallChip key={ball.key} ballKey={ball.key} className="w-full justify-center" />
           ))}

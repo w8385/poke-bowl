@@ -47,7 +47,7 @@ export default async function PokemonDetailPage({
         </div>
         <div>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">대체 후보</p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {item.altBalls.length ? item.altBalls.map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} className="w-full justify-center" />) : <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">투표 후보에서 선택 가능</p>}
           </div>
         </div>

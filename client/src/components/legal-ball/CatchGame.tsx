@@ -1108,7 +1108,7 @@ export function CatchGame() {
               <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">보유 코인 {coins}</span>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <MiniStat label="구매 횟수" value={`${shopStats.purchaseCount}회`} />
               <MiniStat label="구매한 볼" value={`${shopStats.purchasedBalls}개`} />
               <MiniStat label="상점 이용" value={shopStats.purchaseCount > 0 ? '활성' : '대기'} />
@@ -1120,7 +1120,7 @@ export function CatchGame() {
               </div>
             ) : null}
 
-            <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {shopOffers.map((offer) => {
                 const owned = inventory[offer.ballKey] ?? 0;
                 const selectedBundles = shopQuantities[offer.ballKey] ?? SHOP_BUNDLE_STEPS[0];
@@ -1243,7 +1243,7 @@ export function CatchGame() {
                 </span>
               </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
                 {activeDexGeneration.pokemon.map((item) => {
                   const caughtEntry = collection[item.slug] ?? null;
                   const isCaught = Boolean(caughtEntry);
@@ -1450,7 +1450,7 @@ export function CatchGame() {
 
       {dexModal && selectedDexPokemon ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setDexModal(null)}>
-          <div className="w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950" onClick={(event) => event.stopPropagation()}>
+          <div className="w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-4 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className={`rounded-3xl p-3 ${selectedDexEntry ? 'bg-emerald-50 dark:bg-emerald-950/20' : 'bg-zinc-100 dark:bg-zinc-900'}`}>
@@ -1609,7 +1609,7 @@ export function CatchGame() {
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {ownedBalls.map((ball) => {
                 const active = selectedBall === ball.key;
                 return (
