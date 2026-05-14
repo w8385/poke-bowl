@@ -504,7 +504,7 @@ export function CatchGame() {
     { id: 'streak-3', title: '감 잡았다', desc: '3연속 포획에 성공했다.', unlocked: bestStreak >= 3, reward: { coins: 120, balls: [{ ballKey: 'quick-ball', count: 1 }] } },
     { id: 'streak-5', title: '포획 마스터 후보', desc: '5연속 포획에 성공했다.', unlocked: bestStreak >= 5, reward: { coins: 260, balls: [{ ballKey: 'quick-ball', count: 2 }, { ballKey: 'ultra-ball', count: 1 }] } },
     { id: 'shop-1', title: '첫 쇼핑', desc: '상점에서 첫 구매를 했다.', unlocked: shopStats.purchaseCount >= 1, reward: { coins: 90, balls: [{ ballKey: 'premier-ball', count: 2 }] } },
-    { id: 'premier-bonus', title: '서비스 챙기기', desc: '프리미어볼 서비스를 1회 이상 받았다.', unlocked: shopStats.premierBonusEarned >= 1, reward: { coins: 150, balls: [{ ballKey: 'luxury-ball', count: 1 }] } },
+    { id: 'premier-bonus', title: '묶음 쇼핑 감각', desc: '볼 상점에서 묶음 구매 흐름을 익혔다.', unlocked: shopStats.premierBonusEarned >= 1, reward: { coins: 150, balls: [{ ballKey: 'luxury-ball', count: 1 }] } },
     { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500, reward: { coins: 300, balls: [{ ballKey: 'beast-ball', count: 1 }] } },
   ];
 
@@ -601,12 +601,12 @@ export function CatchGame() {
             </HubCard>
             <HubCard
               title="상점"
-              desc="코인으로 볼을 묶음 구매하고, 10개 단위마다 프리미어볼 서비스를 챙긴다."
+              desc="코인으로 볼을 묶음 구매하고 필요한 재고를 채운다."
               actionLabel="상점 보기"
               onAction={() => setActiveTab('shop')}
               tone="amber"
             >
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">총 구매 {shopStats.purchaseCount}회 · 서비스 프리미어볼 {shopStats.premierBonusEarned}개</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">총 구매 {shopStats.purchaseCount}회 · 구매한 볼 {shopStats.purchasedBalls}개</p>
             </HubCard>
             <HubCard
               title="도감"
@@ -805,7 +805,7 @@ export function CatchGame() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">볼 상점</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">묶음으로 사고, 10개 단위마다 프리미어볼 서비스를 챙긴다.</p>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">묶음으로 사고 원하는 볼 재고를 채운다.</p>
               </div>
               <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">보유 코인 {coins}</span>
             </div>
