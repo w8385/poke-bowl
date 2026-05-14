@@ -283,12 +283,12 @@ export function CatchGame() {
     setInventory((prev) => ({ ...prev, [ballKey]: Math.max(0, (prev[ballKey] ?? 0) - 1) }));
   }
 
-  function nextEncounter() {
+  const nextEncounter = useCallback(() => {
     setEncounter(createEncounter());
     setLastResult(null);
     setLastReward(null);
     setActiveTab('catch');
-  }
+  }, []);
 
   function resetRun() {
     setInventory(cloneDefaultInventory());
@@ -486,15 +486,19 @@ export function CatchGame() {
       }
 
       if (event.key === 'z' || event.key === 'Z') {
-        if (!selectedBallEntry) return;
         event.preventDefault();
+        if (encounter.caught || encounter.escaped) {
+          nextEncounter();
+          return;
+        }
+        if (!selectedBallEntry) return;
         onThrow(selectedBallEntry.key);
       }
     }
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [moveBall, onThrow, selectedBallEntry]);
+  }, [encounter.caught, encounter.escaped, moveBall, nextEncounter, onThrow, selectedBallEntry]);
 
   const achievements: AchievementDefinition[] = [
     { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1, reward: { coins: 80, balls: [{ ballKey: 'poke-ball', count: 3 }] } },
@@ -709,7 +713,6 @@ export function CatchGame() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
-                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">상단 탭으로 다른 화면 갔다 와도 선택한 볼과 가방은 그대로 유지된다. ← → 로 볼 선택, Z 로 던지기 가능.</p>
                 </div>
                 <button
                   type="button"
@@ -771,6 +774,10 @@ export function CatchGame() {
                 )}
               </div>
             </article>
+
+            <div className="lg:col-span-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+              도움말 · ← → 볼 선택 · Z 던지기 · 포획 끝나면 Z로 다음 야생 포켓몬 · 가방에서 볼 선택 시 바로 닫힘
+            </div>
           </section>
         ) : null}
 
