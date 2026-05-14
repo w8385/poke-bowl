@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type Locale = 'ko' | 'en';
+type Locale = 'ko' | 'en' | 'ja';
 
 const options: { value: Locale; label: string }[] = [
   { value: 'ko', label: '한국어' },
   { value: 'en', label: 'English' },
+  { value: 'ja', label: '日本語' },
 ];
 
 export function LanguageSwitcher() {
@@ -16,7 +17,7 @@ export function LanguageSwitcher() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem('poke-bowl.locale');
-    if (saved === 'ko' || saved === 'en') {
+    if (saved === 'ko' || saved === 'en' || saved === 'ja') {
       setLocale(saved);
       document.documentElement.lang = saved;
     }

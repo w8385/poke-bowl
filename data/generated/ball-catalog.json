@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T15:58:31.138Z",
+  "updatedAt": "2026-05-14T16:02:30.466Z",
   "balls": [
     {
       "key": "poke-ball",
@@ -55,7 +55,7 @@
     },
     {
       "key": "premier-ball",
-      "nameKo": "프레미어볼",
+      "nameKo": "프리미어볼",
       "nameEn": "Premier Ball",
       "rarityTier": "common",
       "officialName": "Premier Ball",

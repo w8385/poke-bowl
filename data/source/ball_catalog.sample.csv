@@ -3,7 +3,7 @@ poke-ball,몬스터볼,Poké Ball,"red,standard",common,Poké Ball,10
 great-ball,슈퍼볼,Great Ball,"blue,standard",common,Great Ball,20
 ultra-ball,하이퍼볼,Ultra Ball,"black,yellow",common,Ultra Ball,30
 master-ball,마스터볼,Master Ball,"purple,master",special,Master Ball,40
-premier-ball,프레미어볼,Premier Ball,"white,clean",common,Premier Ball,50
+premier-ball,프리미어볼,Premier Ball,"white,clean",common,Premier Ball,50
 heal-ball,힐볼,Heal Ball,"pink,soft",common,Heal Ball,60
 net-ball,네트볼,Net Ball,"teal,water",common,Net Ball,70
 nest-ball,네스트볼,Nest Ball,"green,earth",common,Nest Ball,80
