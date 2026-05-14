@@ -718,7 +718,7 @@ export function CatchGame() {
               </div>
             </article>
 
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="space-y-6">
               <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -787,7 +787,7 @@ export function CatchGame() {
 
               <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">현재 진행</h3>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                   <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
                   <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
                   <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
