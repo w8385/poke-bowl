@@ -299,18 +299,6 @@ export function CatchGame() {
       .map(([generation, pokemon]) => ({ generation, pokemon: [...pokemon].sort((a, b) => a.dex - b.dex) }))
       .sort((a, b) => a.generation - b.generation);
   }, []);
-  const unlockedAchievementCount = useMemo(() => {
-    let unlocked = 0;
-    if (caughtCount >= 1) unlocked += 1;
-    if (caughtCount >= 10) unlocked += 1;
-    if (caughtCount >= 30) unlocked += 1;
-    if (bestStreak >= 3) unlocked += 1;
-    if (bestStreak >= 5) unlocked += 1;
-    if (shopStats.purchaseCount >= 1) unlocked += 1;
-    if (shopStats.premierBonusEarned >= 1) unlocked += 1;
-    if (coins >= 500) unlocked += 1;
-    return unlocked;
-  }, [bestStreak, caughtCount, coins, shopStats.purchaseCount, shopStats.premierBonusEarned]);
   const selectedBallIndex = Math.max(0, ownedBalls.findIndex((ball) => ball.key === selectedBall));
   const selectedBallEntry = ownedBalls[selectedBallIndex] ?? ownedBalls[0] ?? null;
   const encounterGender = useMemo(() => getEncounterGender(encounter.pokemon), [encounter.pokemon]);
@@ -319,6 +307,30 @@ export function CatchGame() {
   const activeDexGeneration = pokemonByGeneration.find((entry) => entry.generation === selectedDexGeneration) ?? pokemonByGeneration[0];
   const selectedRegion = regions.find((region) => region.id === selectedRegionId) ?? regions[0];
   const selectedRegionRemaining = Math.max(0, selectedRegion.maxEncounters - regionEncounterCount);
+  const favoriteRecordCount = Object.keys(favoriteRecords).length;
+  const regionCatchStats = useMemo(() => {
+    return regions.map((region) => {
+      const total = allPokemon.filter((pokemon) => pokemon.generation === region.generation).length;
+      const caught = allPokemon.filter((pokemon) => pokemon.generation === region.generation && collection[pokemon.slug]).length;
+      return { region, total, caught };
+    });
+  }, [collection, regions]);
+  const maxRegionCaught = useMemo(() => regionCatchStats.reduce((max, entry) => Math.max(max, entry.caught), 0), [regionCatchStats]);
+  const uniqueCaughtBallCount = useMemo(() => {
+    const used = new Set<string>();
+    Object.values(collection).forEach((entry) => entry.caughtBalls.forEach((ballKey) => used.add(ballKey)));
+    return used.size;
+  }, [collection]);
+  const ballSpeciesCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.values(collection).forEach((entry) => {
+      entry.caughtBalls.forEach((ballKey) => {
+        counts[ballKey] = (counts[ballKey] ?? 0) + 1;
+      });
+    });
+    return counts;
+  }, [collection]);
+  const maxBallSpeciesCount = useMemo(() => Object.values(ballSpeciesCounts).reduce((max, count) => Math.max(max, count), 0), [ballSpeciesCounts]);
   const selectedPokemonRecords = useMemo(() => {
     if (!selectedDexPokemon) return [];
     return history.filter((item) => item.slug === selectedDexPokemon.slug);
@@ -715,12 +727,21 @@ export function CatchGame() {
     { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1, reward: { coins: 80, balls: [{ ballKey: 'poke-ball', count: 3 }] } },
     { id: 'collector-10', title: '도감 수집가', desc: '포켓몬 10종을 등록했다.', unlocked: caughtCount >= 10, reward: { coins: 180, balls: [{ ballKey: 'great-ball', count: 2 }] } },
     { id: 'collector-30', title: '도감 연구원', desc: '포켓몬 30종을 등록했다.', unlocked: caughtCount >= 30, reward: { coins: 420, balls: [{ ballKey: 'ultra-ball', count: 2 }, { ballKey: 'luxury-ball', count: 1 }] } },
+    { id: 'collector-60', title: '대형 도감 프로젝트', desc: '포켓몬 60종을 등록했다.', unlocked: caughtCount >= 60, reward: { coins: 700, balls: [{ ballKey: 'ultra-ball', count: 3 }, { ballKey: 'dream-ball', count: 1 }] } },
     { id: 'streak-3', title: '감 잡았다', desc: '3연속 포획에 성공했다.', unlocked: bestStreak >= 3, reward: { coins: 120, balls: [{ ballKey: 'quick-ball', count: 1 }] } },
     { id: 'streak-5', title: '포획 마스터 후보', desc: '5연속 포획에 성공했다.', unlocked: bestStreak >= 5, reward: { coins: 260, balls: [{ ballKey: 'quick-ball', count: 2 }, { ballKey: 'ultra-ball', count: 1 }] } },
     { id: 'shop-1', title: '첫 쇼핑', desc: '상점에서 첫 구매를 했다.', unlocked: shopStats.purchaseCount >= 1, reward: { coins: 90, balls: [{ ballKey: 'premier-ball', count: 2 }] } },
     { id: 'premier-bonus', title: '묶음 쇼핑 감각', desc: '볼 상점에서 묶음 구매 흐름을 익혔다.', unlocked: shopStats.premierBonusEarned >= 1, reward: { coins: 150, balls: [{ ballKey: 'luxury-ball', count: 1 }] } },
     { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500, reward: { coins: 300, balls: [{ ballKey: 'beast-ball', count: 1 }] } },
+    { id: 'record-20', title: '기록 누적 중', desc: '성공 포획을 20회 달성했다.', unlocked: successfulCatchCount >= 20, reward: { coins: 220, balls: [{ ballKey: 'repeat-ball', count: 2 }] } },
+    { id: 'favorite-3', title: '대표 큐레이터', desc: '대표 포획 기록을 3종 지정했다.', unlocked: favoriteRecordCount >= 3, reward: { coins: 180, balls: [{ ballKey: 'luxury-ball', count: 1 }, { ballKey: 'premier-ball', count: 2 }] } },
+    { id: 'ball-variety-5', title: '볼 컬렉터', desc: '서로 다른 볼 5종으로 포획 기록을 남겼다.', unlocked: uniqueCaughtBallCount >= 5, reward: { coins: 200, balls: [{ ballKey: 'friend-ball', count: 1 }, { ballKey: 'moon-ball', count: 1 }] } },
+    { id: 'ball-specialist-5', title: '볼 전문 운용', desc: '한 가지 볼로 5종 이상 등록했다.', unlocked: maxBallSpeciesCount >= 5, reward: { coins: 260, balls: [{ ballKey: 'level-ball', count: 1 }, { ballKey: 'fast-ball', count: 1 }] } },
+    { id: 'region-scout', title: '지방 개척자', desc: '어느 한 지방에서 10종 이상 등록했다.', unlocked: maxRegionCaught >= 10, reward: { coins: 260, balls: [{ ballKey: 'safari-ball', count: 1 }, { ballKey: 'nest-ball', count: 2 }] } },
+    { id: 'region-surveyor', title: '지방 조사 완료권', desc: '어느 한 지방에서 25종 이상 등록했다.', unlocked: maxRegionCaught >= 25, reward: { coins: 420, balls: [{ ballKey: 'dive-ball', count: 2 }, { ballKey: 'luxury-ball', count: 1 }] } },
   ];
+
+  const unlockedAchievementCount = achievements.filter((achievement) => achievement.unlocked).length;
 
   const typeSupplyDefinitions: TypeSupplyDefinition[] = useMemo(() => {
     return Object.entries(TYPE_BALL_HINTS).flatMap(([type, balls]) => {
@@ -1373,6 +1394,13 @@ export function CatchGame() {
                 {lastAchievementAction}
               </div>
             ) : null}
+
+            <div className="flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">수집형</span>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">지역형</span>
+              <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-800 dark:bg-sky-950 dark:text-sky-200">볼 활용형</span>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-950 dark:text-amber-200">기록형</span>
+            </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {achievements.map((achievement) => {
