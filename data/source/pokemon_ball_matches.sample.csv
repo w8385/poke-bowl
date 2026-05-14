@@ -1,0 +1,12 @@
+dex,slug,name_ko,name_en,primary_type,secondary_type,palette_tags,recommended_ball,recommended_ball_reason,alt_balls,design_tags,obtain_note,legality_status,legality_note,source_note,published
+1,bulbasaur,이상해씨,Bulbasaur,grass,poison,"green,natural",friend-ball,초록 톤과 자연 이미지가 잘 맞음,nest-ball,"cute,natural",세대별 입수 루트 확인 필요,check,특수 조합 여부 확인 필요,초안 샘플,TRUE
+4,charmander,파이리,Charmander,fire,,"red,warm",level-ball,주황/레드 계열과 역동 이미지가 무난함,fast-ball,"starter,energetic",SV 기준 볼 수급 메모 추가 예정,official,,초안 샘플,TRUE
+7,squirtle,꼬부기,Squirtle,water,,"blue,clean",lure-ball,파란 계열과 물 타입 이미지가 가장 직관적임,dive-ball,"starter,calm",세대별 입수 루트 확인 필요,check,세대별 이벤트/이전작 경로 점검 필요,초안 샘플,TRUE
+25,pikachu,피카츄,Pikachu,electric,,"yellow,bright",fast-ball,노란 톤과 스피디한 상징성이 잘 맞음,level-ball,"iconic,energetic",볼 유전/배포 이력 확인 권장,limited,한정 조합 가능성 점검 필요,초안 샘플,TRUE
+37,vulpix,식스테일,Vulpix,fire,,"red,elegant",love-ball,우아하고 사랑스러운 인상에 가장 잘 어울림,dream-ball,"cute,elegant",세대별 입수 루트 확인 필요,check,지역폼과 분리 검토 필요,초안 샘플,TRUE
+52,meowth,나옹,Meowth,normal,,"gold,urban",luxury-ball,코인 모티브와 도시적인 분위기에 잘 맞음,moon-ball,"mischief,urban",지역폼별 분리 전 임시 데이터,check,알로라/가라르/팔데아 폼 분리 필요,초안 샘플,TRUE
+133,eevee,이브이,Eevee,normal,,"brown,warm",friend-ball,무난하고 친근한 이미지에 가장 안정적임,love-ball,"cute,versatile",진화형과 별도 관리 필요,official,,초안 샘플,TRUE
+143,snorlax,잠만보,Snorlax,normal,,"blue,heavy",heavy-ball,체급감과 무게 이미지가 매우 직관적임,luxury-ball,"big,calm",특수 이벤트 개체 여부만 별도 확인,official,,초안 샘플,TRUE
+197,umbreon,블래키,Umbreon,dark,,"black,night",moon-ball,밤과 달 이미지가 대표적으로 잘 맞음,luxury-ball,"cool,elegant",이전작 볼 유전 경로 확인 권장,official,,초안 샘플,TRUE
+448,lucario,루카리오,Lucario,fighting,steel,"blue,aura",heavy-ball,강인함과 금속성 인상에 무게감 있는 볼이 잘 맞음,moon-ball,"cool,heroic",리본/이벤트 개체와는 별도,official,,초안 샘플,TRUE
+470,leafeon,리피아,Leafeon,grass,,"green,leaf",friend-ball,잎사귀와 자연 테마에 가장 자연스럽게 붙음,nest-ball,"natural,elegant",진화 전 볼 계승 전제 확인 필요,official,,초안 샘플,TRUE

@@ -1,0 +1,97 @@
+{
+  "updatedAt": "2026-05-14T14:00:00Z",
+  "shinyOdds": {
+    "base": 128,
+    "tiers": [
+      {
+        "key": "shiny-charm-1",
+        "label": "Shiny Charm I",
+        "unlockRule": {
+          "kind": "region_completion",
+          "generation": 1,
+          "regionId": "viridian-forest",
+          "threshold": 0.5
+        },
+        "odds": 96
+      },
+      {
+        "key": "shiny-charm-2",
+        "label": "Shiny Charm II",
+        "unlockRule": {
+          "kind": "generation_completion",
+          "generation": 1,
+          "threshold": 0.3
+        },
+        "odds": 72
+      },
+      {
+        "key": "style-bonus",
+        "label": "Style Bonus",
+        "unlockRule": {
+          "kind": "best_grade_count",
+          "grade": "S",
+          "count": 20
+        },
+        "odds": 56
+      },
+      {
+        "key": "collector-bonus",
+        "label": "Collector Bonus",
+        "unlockRule": {
+          "kind": "shiny_species_count",
+          "count": 10
+        },
+        "odds": 40
+      }
+    ]
+  },
+  "ballUnlocks": [
+    {
+      "ballKey": "nest-ball",
+      "unlockRule": {
+        "kind": "region_discovered_species",
+        "regionId": "route-1",
+        "count": 4
+      }
+    },
+    {
+      "ballKey": "net-ball",
+      "unlockRule": {
+        "kind": "region_caught_species",
+        "regionId": "viridian-forest",
+        "count": 6
+      }
+    },
+    {
+      "ballKey": "friend-ball",
+      "unlockRule": {
+        "kind": "generation_completion",
+        "generation": 1,
+        "threshold": 0.3
+      }
+    },
+    {
+      "ballKey": "dream-ball",
+      "unlockRule": {
+        "kind": "shiny_species_count",
+        "count": 5
+      }
+    }
+  ],
+  "regionSchema": {
+    "requiredFields": [
+      "id",
+      "generation",
+      "name",
+      "unlock",
+      "encounters",
+      "rewards"
+    ],
+    "encounterFields": [
+      "slug",
+      "weight",
+      "minLevel",
+      "maxLevel"
+    ]
+  }
+}

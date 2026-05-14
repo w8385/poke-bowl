@@ -1,0 +1,134 @@
+{
+  "generation": 1,
+  "regions": [
+    {
+      "id": "starter-meadow",
+      "name": {
+        "ko": "스타터 초원",
+        "en": "Starter Meadow"
+      },
+      "theme": "tutorial",
+      "unlock": {
+        "kind": "start"
+      },
+      "encounters": [
+        { "slug": "bulbasaur", "weight": 1, "minLevel": 5, "maxLevel": 5 },
+        { "slug": "charmander", "weight": 1, "minLevel": 5, "maxLevel": 5 },
+        { "slug": "squirtle", "weight": 1, "minLevel": 5, "maxLevel": 5 },
+        { "slug": "pidgey", "weight": 3, "minLevel": 2, "maxLevel": 4 },
+        { "slug": "rattata", "weight": 3, "minLevel": 2, "maxLevel": 4 }
+      ],
+      "rewards": {
+        "firstClear": {
+          "balls": [
+            { "ballKey": "great-ball", "count": 3 },
+            { "ballKey": "premier-ball", "count": 2 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "route-1",
+      "name": {
+        "ko": "1번도로",
+        "en": "Route 1"
+      },
+      "theme": "field",
+      "unlock": {
+        "kind": "region_clear",
+        "regionId": "starter-meadow"
+      },
+      "encounters": [
+        { "slug": "pidgey", "weight": 5, "minLevel": 2, "maxLevel": 5 },
+        { "slug": "rattata", "weight": 5, "minLevel": 2, "maxLevel": 5 },
+        { "slug": "spearow", "weight": 2, "minLevel": 3, "maxLevel": 5 },
+        { "slug": "oddish", "weight": 1, "minLevel": 4, "maxLevel": 6 }
+      ],
+      "rewards": {
+        "discover4": {
+          "unlockBall": "nest-ball"
+        }
+      }
+    },
+    {
+      "id": "viridian-forest",
+      "name": {
+        "ko": "상록숲",
+        "en": "Viridian Forest"
+      },
+      "theme": "forest",
+      "unlock": {
+        "kind": "region_clear",
+        "regionId": "route-1"
+      },
+      "encounters": [
+        { "slug": "caterpie", "weight": 5, "minLevel": 3, "maxLevel": 6 },
+        { "slug": "weedle", "weight": 5, "minLevel": 3, "maxLevel": 6 },
+        { "slug": "pikachu", "weight": 1, "minLevel": 4, "maxLevel": 6 },
+        { "slug": "metapod", "weight": 2, "minLevel": 4, "maxLevel": 7 },
+        { "slug": "kakuna", "weight": 2, "minLevel": 4, "maxLevel": 7 }
+      ],
+      "rewards": {
+        "caught6": {
+          "unlockBall": "net-ball"
+        },
+        "completion50": {
+          "unlockShinyTier": "shiny-charm-1"
+        }
+      }
+    },
+    {
+      "id": "mt-moon",
+      "name": {
+        "ko": "달맞이산",
+        "en": "Mt. Moon"
+      },
+      "theme": "cave",
+      "unlock": {
+        "kind": "region_clear",
+        "regionId": "viridian-forest"
+      },
+      "encounters": [
+        { "slug": "zubat", "weight": 5, "minLevel": 6, "maxLevel": 9 },
+        { "slug": "geodude", "weight": 4, "minLevel": 6, "maxLevel": 9 },
+        { "slug": "paras", "weight": 2, "minLevel": 7, "maxLevel": 10 },
+        { "slug": "clefairy", "weight": 1, "minLevel": 8, "maxLevel": 10 }
+      ],
+      "rewards": {
+        "firstClear": {
+          "balls": [
+            { "ballKey": "dusk-ball", "count": 2 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "safari-zone",
+      "name": {
+        "ko": "사파리존",
+        "en": "Safari Zone"
+      },
+      "theme": "special",
+      "unlock": {
+        "kind": "generation_completion",
+        "generation": 1,
+        "threshold": 0.35
+      },
+      "encounters": [
+        { "slug": "nidoran-f", "weight": 3, "minLevel": 18, "maxLevel": 24 },
+        { "slug": "nidoran-m", "weight": 3, "minLevel": 18, "maxLevel": 24 },
+        { "slug": "scyther", "weight": 1, "minLevel": 22, "maxLevel": 26 },
+        { "slug": "pinsir", "weight": 1, "minLevel": 22, "maxLevel": 26 },
+        { "slug": "tauros", "weight": 1, "minLevel": 24, "maxLevel": 28 }
+      ],
+      "rewards": {
+        "firstClear": {
+          "unlockBall": "safari-ball"
+        },
+        "completion100": {
+          "unlockShinyTier": "collector-bonus"
+        }
+      }
+    }
+  ]
+}

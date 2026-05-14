@@ -1,0 +1,356 @@
+{
+  "updatedAt": "2026-05-14T13:30:02.145Z",
+  "balls": [
+    {
+      "key": "poke-ball",
+      "nameKo": "몬스터볼",
+      "nameEn": "Poké Ball",
+      "rarityTier": "common",
+      "officialName": "Poké Ball",
+      "colorTags": [
+        "red",
+        "standard"
+      ],
+      "iconPath": "/balls/poke-ball.png",
+      "sortOrder": 10
+    },
+    {
+      "key": "great-ball",
+      "nameKo": "슈퍼볼",
+      "nameEn": "Great Ball",
+      "rarityTier": "common",
+      "officialName": "Great Ball",
+      "colorTags": [
+        "blue",
+        "standard"
+      ],
+      "iconPath": "/balls/great-ball.png",
+      "sortOrder": 20
+    },
+    {
+      "key": "ultra-ball",
+      "nameKo": "하이퍼볼",
+      "nameEn": "Ultra Ball",
+      "rarityTier": "common",
+      "officialName": "Ultra Ball",
+      "colorTags": [
+        "black",
+        "yellow"
+      ],
+      "iconPath": "/balls/ultra-ball.png",
+      "sortOrder": 30
+    },
+    {
+      "key": "master-ball",
+      "nameKo": "마스터볼",
+      "nameEn": "Master Ball",
+      "rarityTier": "special",
+      "officialName": "Master Ball",
+      "colorTags": [
+        "purple",
+        "master"
+      ],
+      "iconPath": "/balls/master-ball.png",
+      "sortOrder": 40
+    },
+    {
+      "key": "premier-ball",
+      "nameKo": "프레미어볼",
+      "nameEn": "Premier Ball",
+      "rarityTier": "common",
+      "officialName": "Premier Ball",
+      "colorTags": [
+        "white",
+        "clean"
+      ],
+      "iconPath": "/balls/premier-ball.png",
+      "sortOrder": 50
+    },
+    {
+      "key": "heal-ball",
+      "nameKo": "힐볼",
+      "nameEn": "Heal Ball",
+      "rarityTier": "common",
+      "officialName": "Heal Ball",
+      "colorTags": [
+        "pink",
+        "soft"
+      ],
+      "iconPath": "/balls/heal-ball.png",
+      "sortOrder": 60
+    },
+    {
+      "key": "net-ball",
+      "nameKo": "넷트볼",
+      "nameEn": "Net Ball",
+      "rarityTier": "common",
+      "officialName": "Net Ball",
+      "colorTags": [
+        "teal",
+        "water"
+      ],
+      "iconPath": "/balls/net-ball.png",
+      "sortOrder": 70
+    },
+    {
+      "key": "nest-ball",
+      "nameKo": "네스트볼",
+      "nameEn": "Nest Ball",
+      "rarityTier": "common",
+      "officialName": "Nest Ball",
+      "colorTags": [
+        "green",
+        "earth"
+      ],
+      "iconPath": "/balls/nest-ball.png",
+      "sortOrder": 80
+    },
+    {
+      "key": "dive-ball",
+      "nameKo": "다이브볼",
+      "nameEn": "Dive Ball",
+      "rarityTier": "common",
+      "officialName": "Dive Ball",
+      "colorTags": [
+        "blue",
+        "water"
+      ],
+      "iconPath": "/balls/dive-ball.png",
+      "sortOrder": 90
+    },
+    {
+      "key": "dusk-ball",
+      "nameKo": "다크볼",
+      "nameEn": "Dusk Ball",
+      "rarityTier": "common",
+      "officialName": "Dusk Ball",
+      "colorTags": [
+        "green",
+        "dark"
+      ],
+      "iconPath": "/balls/dusk-ball.png",
+      "sortOrder": 100
+    },
+    {
+      "key": "timer-ball",
+      "nameKo": "타이마볼",
+      "nameEn": "Timer Ball",
+      "rarityTier": "common",
+      "officialName": "Timer Ball",
+      "colorTags": [
+        "red",
+        "clock"
+      ],
+      "iconPath": "/balls/timer-ball.png",
+      "sortOrder": 110
+    },
+    {
+      "key": "quick-ball",
+      "nameKo": "퀵볼",
+      "nameEn": "Quick Ball",
+      "rarityTier": "common",
+      "officialName": "Quick Ball",
+      "colorTags": [
+        "blue",
+        "yellow"
+      ],
+      "iconPath": "/balls/quick-ball.png",
+      "sortOrder": 120
+    },
+    {
+      "key": "repeat-ball",
+      "nameKo": "리피트볼",
+      "nameEn": "Repeat Ball",
+      "rarityTier": "common",
+      "officialName": "Repeat Ball",
+      "colorTags": [
+        "red",
+        "orange"
+      ],
+      "iconPath": "/balls/repeat-ball.png",
+      "sortOrder": 130
+    },
+    {
+      "key": "luxury-ball",
+      "nameKo": "럭셔리볼",
+      "nameEn": "Luxury Ball",
+      "rarityTier": "common",
+      "officialName": "Luxury Ball",
+      "colorTags": [
+        "black",
+        "gold"
+      ],
+      "iconPath": "/balls/luxury-ball.png",
+      "sortOrder": 140
+    },
+    {
+      "key": "fast-ball",
+      "nameKo": "패스트볼",
+      "nameEn": "Fast Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Fast Ball",
+      "colorTags": [
+        "yellow",
+        "energetic"
+      ],
+      "iconPath": "/balls/fast-ball.png",
+      "sortOrder": 150
+    },
+    {
+      "key": "friend-ball",
+      "nameKo": "프렌드볼",
+      "nameEn": "Friend Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Friend Ball",
+      "colorTags": [
+        "green",
+        "natural"
+      ],
+      "iconPath": "/balls/friend-ball.png",
+      "sortOrder": 160
+    },
+    {
+      "key": "moon-ball",
+      "nameKo": "문볼",
+      "nameEn": "Moon Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Moon Ball",
+      "colorTags": [
+        "black",
+        "night"
+      ],
+      "iconPath": "/balls/moon-ball.png",
+      "sortOrder": 170
+    },
+    {
+      "key": "lure-ball",
+      "nameKo": "루어볼",
+      "nameEn": "Lure Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Lure Ball",
+      "colorTags": [
+        "blue",
+        "water"
+      ],
+      "iconPath": "/balls/lure-ball.png",
+      "sortOrder": 180
+    },
+    {
+      "key": "love-ball",
+      "nameKo": "러브러브볼",
+      "nameEn": "Love Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Love Ball",
+      "colorTags": [
+        "pink",
+        "cute"
+      ],
+      "iconPath": "/balls/love-ball.png",
+      "sortOrder": 190
+    },
+    {
+      "key": "level-ball",
+      "nameKo": "레벨볼",
+      "nameEn": "Level Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Level Ball",
+      "colorTags": [
+        "red",
+        "warm"
+      ],
+      "iconPath": "/balls/level-ball.png",
+      "sortOrder": 200
+    },
+    {
+      "key": "heavy-ball",
+      "nameKo": "헤비볼",
+      "nameEn": "Heavy Ball",
+      "rarityTier": "apricorn",
+      "officialName": "Heavy Ball",
+      "colorTags": [
+        "gray",
+        "heavy"
+      ],
+      "iconPath": "/balls/heavy-ball.png",
+      "sortOrder": 210
+    },
+    {
+      "key": "dream-ball",
+      "nameKo": "드림볼",
+      "nameEn": "Dream Ball",
+      "rarityTier": "special",
+      "officialName": "Dream Ball",
+      "colorTags": [
+        "pink",
+        "dreamy"
+      ],
+      "iconPath": "/balls/dream-ball.png",
+      "sortOrder": 220
+    },
+    {
+      "key": "beast-ball",
+      "nameKo": "울트라볼",
+      "nameEn": "Beast Ball",
+      "rarityTier": "special",
+      "officialName": "Beast Ball",
+      "colorTags": [
+        "blue",
+        "ultra"
+      ],
+      "iconPath": "/balls/beast-ball.png",
+      "sortOrder": 230
+    },
+    {
+      "key": "safari-ball",
+      "nameKo": "사파리볼",
+      "nameEn": "Safari Ball",
+      "rarityTier": "special",
+      "officialName": "Safari Ball",
+      "colorTags": [
+        "green",
+        "safari"
+      ],
+      "iconPath": "/balls/safari-ball.png",
+      "sortOrder": 240
+    },
+    {
+      "key": "sport-ball",
+      "nameKo": "컴페볼",
+      "nameEn": "Sport Ball",
+      "rarityTier": "special",
+      "officialName": "Sport Ball",
+      "colorTags": [
+        "red",
+        "sport"
+      ],
+      "iconPath": "/balls/sport-ball.png",
+      "sortOrder": 250
+    },
+    {
+      "key": "strange-ball",
+      "nameKo": "이상한볼",
+      "nameEn": "Strange Ball",
+      "rarityTier": "special",
+      "officialName": "Strange Ball",
+      "colorTags": [
+        "gray",
+        "strange"
+      ],
+      "iconPath": "/balls/strange-ball.png",
+      "sortOrder": 260
+    },
+    {
+      "key": "cherish-ball",
+      "nameKo": "프레셔스볼",
+      "nameEn": "Cherish Ball",
+      "rarityTier": "special",
+      "officialName": "Cherish Ball",
+      "colorTags": [
+        "red",
+        "event"
+      ],
+      "iconPath": "/balls/cherish-ball.png",
+      "sortOrder": 270
+    }
+  ]
+}

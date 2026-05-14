@@ -1,0 +1,317 @@
+{
+  "updatedAt": "2026-05-14T13:30:02.145Z",
+  "pokemon": [
+    {
+      "dex": 1,
+      "slug": "bulbasaur",
+      "nameKo": "이상해씨",
+      "nameEn": "Bulbasaur",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "recommendedBall": "friend-ball",
+      "recommendedBallNameKo": "프렌드볼",
+      "altBalls": [
+        "nest-ball"
+      ],
+      "legalityStatus": "check",
+      "searchTokens": [
+        "1",
+        "bulbasaur",
+        "이상해씨",
+        "Bulbasaur",
+        "grass",
+        "poison",
+        "friend-ball",
+        "nest-ball",
+        "green",
+        "natural",
+        "cute",
+        "natural"
+      ]
+    },
+    {
+      "dex": 4,
+      "slug": "charmander",
+      "nameKo": "파이리",
+      "nameEn": "Charmander",
+      "types": [
+        "fire"
+      ],
+      "recommendedBall": "level-ball",
+      "recommendedBallNameKo": "레벨볼",
+      "altBalls": [
+        "fast-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "4",
+        "charmander",
+        "파이리",
+        "Charmander",
+        "fire",
+        "level-ball",
+        "fast-ball",
+        "red",
+        "warm",
+        "starter",
+        "energetic"
+      ]
+    },
+    {
+      "dex": 7,
+      "slug": "squirtle",
+      "nameKo": "꼬부기",
+      "nameEn": "Squirtle",
+      "types": [
+        "water"
+      ],
+      "recommendedBall": "lure-ball",
+      "recommendedBallNameKo": "루어볼",
+      "altBalls": [
+        "dive-ball"
+      ],
+      "legalityStatus": "check",
+      "searchTokens": [
+        "7",
+        "squirtle",
+        "꼬부기",
+        "Squirtle",
+        "water",
+        "lure-ball",
+        "dive-ball",
+        "blue",
+        "clean",
+        "starter",
+        "calm"
+      ]
+    },
+    {
+      "dex": 25,
+      "slug": "pikachu",
+      "nameKo": "피카츄",
+      "nameEn": "Pikachu",
+      "types": [
+        "electric"
+      ],
+      "recommendedBall": "fast-ball",
+      "recommendedBallNameKo": "패스트볼",
+      "altBalls": [
+        "level-ball"
+      ],
+      "legalityStatus": "limited",
+      "searchTokens": [
+        "25",
+        "pikachu",
+        "피카츄",
+        "Pikachu",
+        "electric",
+        "fast-ball",
+        "level-ball",
+        "yellow",
+        "bright",
+        "iconic",
+        "energetic"
+      ]
+    },
+    {
+      "dex": 37,
+      "slug": "vulpix",
+      "nameKo": "식스테일",
+      "nameEn": "Vulpix",
+      "types": [
+        "fire"
+      ],
+      "recommendedBall": "love-ball",
+      "recommendedBallNameKo": "러브러브볼",
+      "altBalls": [
+        "dream-ball"
+      ],
+      "legalityStatus": "check",
+      "searchTokens": [
+        "37",
+        "vulpix",
+        "식스테일",
+        "Vulpix",
+        "fire",
+        "love-ball",
+        "dream-ball",
+        "red",
+        "elegant",
+        "cute",
+        "elegant"
+      ]
+    },
+    {
+      "dex": 52,
+      "slug": "meowth",
+      "nameKo": "나옹",
+      "nameEn": "Meowth",
+      "types": [
+        "normal"
+      ],
+      "recommendedBall": "luxury-ball",
+      "recommendedBallNameKo": "럭셔리볼",
+      "altBalls": [
+        "moon-ball"
+      ],
+      "legalityStatus": "check",
+      "searchTokens": [
+        "52",
+        "meowth",
+        "나옹",
+        "Meowth",
+        "normal",
+        "luxury-ball",
+        "moon-ball",
+        "gold",
+        "urban",
+        "mischief",
+        "urban"
+      ]
+    },
+    {
+      "dex": 133,
+      "slug": "eevee",
+      "nameKo": "이브이",
+      "nameEn": "Eevee",
+      "types": [
+        "normal"
+      ],
+      "recommendedBall": "friend-ball",
+      "recommendedBallNameKo": "프렌드볼",
+      "altBalls": [
+        "love-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "133",
+        "eevee",
+        "이브이",
+        "Eevee",
+        "normal",
+        "friend-ball",
+        "love-ball",
+        "brown",
+        "warm",
+        "cute",
+        "versatile"
+      ]
+    },
+    {
+      "dex": 143,
+      "slug": "snorlax",
+      "nameKo": "잠만보",
+      "nameEn": "Snorlax",
+      "types": [
+        "normal"
+      ],
+      "recommendedBall": "heavy-ball",
+      "recommendedBallNameKo": "헤비볼",
+      "altBalls": [
+        "luxury-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "143",
+        "snorlax",
+        "잠만보",
+        "Snorlax",
+        "normal",
+        "heavy-ball",
+        "luxury-ball",
+        "blue",
+        "heavy",
+        "big",
+        "calm"
+      ]
+    },
+    {
+      "dex": 197,
+      "slug": "umbreon",
+      "nameKo": "블래키",
+      "nameEn": "Umbreon",
+      "types": [
+        "dark"
+      ],
+      "recommendedBall": "moon-ball",
+      "recommendedBallNameKo": "문볼",
+      "altBalls": [
+        "luxury-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "197",
+        "umbreon",
+        "블래키",
+        "Umbreon",
+        "dark",
+        "moon-ball",
+        "luxury-ball",
+        "black",
+        "night",
+        "cool",
+        "elegant"
+      ]
+    },
+    {
+      "dex": 448,
+      "slug": "lucario",
+      "nameKo": "루카리오",
+      "nameEn": "Lucario",
+      "types": [
+        "fighting",
+        "steel"
+      ],
+      "recommendedBall": "heavy-ball",
+      "recommendedBallNameKo": "헤비볼",
+      "altBalls": [
+        "moon-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "448",
+        "lucario",
+        "루카리오",
+        "Lucario",
+        "fighting",
+        "steel",
+        "heavy-ball",
+        "moon-ball",
+        "blue",
+        "aura",
+        "cool",
+        "heroic"
+      ]
+    },
+    {
+      "dex": 470,
+      "slug": "leafeon",
+      "nameKo": "리피아",
+      "nameEn": "Leafeon",
+      "types": [
+        "grass"
+      ],
+      "recommendedBall": "friend-ball",
+      "recommendedBallNameKo": "프렌드볼",
+      "altBalls": [
+        "nest-ball"
+      ],
+      "legalityStatus": "official",
+      "searchTokens": [
+        "470",
+        "leafeon",
+        "리피아",
+        "Leafeon",
+        "grass",
+        "friend-ball",
+        "nest-ball",
+        "green",
+        "leaf",
+        "natural",
+        "elegant"
+      ]
+    }
+  ]
+}

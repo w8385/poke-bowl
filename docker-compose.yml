@@ -1,0 +1,36 @@
+services:
+  poke-bowl-db:
+    image: postgres:16-alpine
+    container_name: poke-bowl-db
+    environment:
+      POSTGRES_DB: poke_bowl
+      POSTGRES_USER: poke_bowl
+      POSTGRES_PASSWORD: poke_bowl
+    volumes:
+      - poke-bowl-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poke_bowl -d poke_bowl"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  poke-bowl-client:
+    build:
+      context: ./client
+    container_name: poke-bowl-client
+    depends_on:
+      poke-bowl-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://poke_bowl:poke_bowl@poke-bowl-db:5432/poke_bowl
+      AUTH_SECRET: change-me-before-production
+      AUTH_URL: http://localhost:3001
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+
+volumes:
+  poke-bowl-postgres:

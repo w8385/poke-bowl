@@ -1,0 +1,27 @@
+{
+  "updatedAt": "2026-05-14T00:00:00Z",
+  "pokemon": [
+    {
+      "dex": 1,
+      "slug": "bulbasaur",
+      "name": {
+        "ko": "이상해씨",
+        "en": "Bulbasaur"
+      },
+      "types": ["grass", "poison"],
+      "paletteTags": ["green", "natural"],
+      "recommendedBall": {
+        "key": "friend-ball",
+        "reason": "초록 톤과 자연 이미지가 가장 잘 맞음"
+      },
+      "altBalls": ["nest-ball"],
+      "designTags": ["cute", "natural"],
+      "obtainNote": "세대별 입수 루트 확인 필요",
+      "legality": {
+        "status": "check",
+        "note": "불법 개조나 미구현 조합 여부 별도 확인"
+      },
+      "sourceNote": "초안 샘플"
+    }
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "updatedAt": "2026-05-14T13:30:02.145Z",
+  "pokemon": [
+    {
+      "dex": 1,
+      "slug": "bulbasaur",
+      "name": {
+        "ko": "이상해씨",
+        "en": "Bulbasaur"
+      },
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "paletteTags": [
+        "green",
+        "natural"
+      ],
+      "recommendedBall": {
+        "key": "friend-ball",
+        "reason": "초록 톤과 자연 이미지가 잘 맞음"
+      },
+      "altBalls": [
+        "nest-ball"
+      ],
+      "designTags": [
+        "cute",
+        "natural"
+      ],
+      "obtainNote": "세대별 입수 루트 확인 필요",
+      "legality": {
+        "status": "check",
+        "note": "특수 조합 여부 확인 필요"
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 4,
+      "slug": "charmander",
+      "name": {
+        "ko": "파이리",
+        "en": "Charmander"
+      },
+      "types": [
+        "fire"
+      ],
+      "paletteTags": [
+        "red",
+        "warm"
+      ],
+      "recommendedBall": {
+        "key": "level-ball",
+        "reason": "주황/레드 계열과 역동 이미지가 무난함"
+      },
+      "altBalls": [
+        "fast-ball"
+      ],
+      "designTags": [
+        "starter",
+        "energetic"
+      ],
+      "obtainNote": "SV 기준 볼 수급 메모 추가 예정",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 7,
+      "slug": "squirtle",
+      "name": {
+        "ko": "꼬부기",
+        "en": "Squirtle"
+      },
+      "types": [
+        "water"
+      ],
+      "paletteTags": [
+        "blue",
+        "clean"
+      ],
+      "recommendedBall": {
+        "key": "lure-ball",
+        "reason": "파란 계열과 물 타입 이미지가 가장 직관적임"
+      },
+      "altBalls": [
+        "dive-ball"
+      ],
+      "designTags": [
+        "starter",
+        "calm"
+      ],
+      "obtainNote": "세대별 입수 루트 확인 필요",
+      "legality": {
+        "status": "check",
+        "note": "세대별 이벤트/이전작 경로 점검 필요"
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 25,
+      "slug": "pikachu",
+      "name": {
+        "ko": "피카츄",
+        "en": "Pikachu"
+      },
+      "types": [
+        "electric"
+      ],
+      "paletteTags": [
+        "yellow",
+        "bright"
+      ],
+      "recommendedBall": {
+        "key": "fast-ball",
+        "reason": "노란 톤과 스피디한 상징성이 잘 맞음"
+      },
+      "altBalls": [
+        "level-ball"
+      ],
+      "designTags": [
+        "iconic",
+        "energetic"
+      ],
+      "obtainNote": "볼 유전/배포 이력 확인 권장",
+      "legality": {
+        "status": "limited",
+        "note": "한정 조합 가능성 점검 필요"
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 37,
+      "slug": "vulpix",
+      "name": {
+        "ko": "식스테일",
+        "en": "Vulpix"
+      },
+      "types": [
+        "fire"
+      ],
+      "paletteTags": [
+        "red",
+        "elegant"
+      ],
+      "recommendedBall": {
+        "key": "love-ball",
+        "reason": "우아하고 사랑스러운 인상에 가장 잘 어울림"
+      },
+      "altBalls": [
+        "dream-ball"
+      ],
+      "designTags": [
+        "cute",
+        "elegant"
+      ],
+      "obtainNote": "세대별 입수 루트 확인 필요",
+      "legality": {
+        "status": "check",
+        "note": "지역폼과 분리 검토 필요"
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 52,
+      "slug": "meowth",
+      "name": {
+        "ko": "나옹",
+        "en": "Meowth"
+      },
+      "types": [
+        "normal"
+      ],
+      "paletteTags": [
+        "gold",
+        "urban"
+      ],
+      "recommendedBall": {
+        "key": "luxury-ball",
+        "reason": "코인 모티브와 도시적인 분위기에 잘 맞음"
+      },
+      "altBalls": [
+        "moon-ball"
+      ],
+      "designTags": [
+        "mischief",
+        "urban"
+      ],
+      "obtainNote": "지역폼별 분리 전 임시 데이터",
+      "legality": {
+        "status": "check",
+        "note": "알로라/가라르/팔데아 폼 분리 필요"
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 133,
+      "slug": "eevee",
+      "name": {
+        "ko": "이브이",
+        "en": "Eevee"
+      },
+      "types": [
+        "normal"
+      ],
+      "paletteTags": [
+        "brown",
+        "warm"
+      ],
+      "recommendedBall": {
+        "key": "friend-ball",
+        "reason": "무난하고 친근한 이미지에 가장 안정적임"
+      },
+      "altBalls": [
+        "love-ball"
+      ],
+      "designTags": [
+        "cute",
+        "versatile"
+      ],
+      "obtainNote": "진화형과 별도 관리 필요",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 143,
+      "slug": "snorlax",
+      "name": {
+        "ko": "잠만보",
+        "en": "Snorlax"
+      },
+      "types": [
+        "normal"
+      ],
+      "paletteTags": [
+        "blue",
+        "heavy"
+      ],
+      "recommendedBall": {
+        "key": "heavy-ball",
+        "reason": "체급감과 무게 이미지가 매우 직관적임"
+      },
+      "altBalls": [
+        "luxury-ball"
+      ],
+      "designTags": [
+        "big",
+        "calm"
+      ],
+      "obtainNote": "특수 이벤트 개체 여부만 별도 확인",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 197,
+      "slug": "umbreon",
+      "name": {
+        "ko": "블래키",
+        "en": "Umbreon"
+      },
+      "types": [
+        "dark"
+      ],
+      "paletteTags": [
+        "black",
+        "night"
+      ],
+      "recommendedBall": {
+        "key": "moon-ball",
+        "reason": "밤과 달 이미지가 대표적으로 잘 맞음"
+      },
+      "altBalls": [
+        "luxury-ball"
+      ],
+      "designTags": [
+        "cool",
+        "elegant"
+      ],
+      "obtainNote": "이전작 볼 유전 경로 확인 권장",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 448,
+      "slug": "lucario",
+      "name": {
+        "ko": "루카리오",
+        "en": "Lucario"
+      },
+      "types": [
+        "fighting",
+        "steel"
+      ],
+      "paletteTags": [
+        "blue",
+        "aura"
+      ],
+      "recommendedBall": {
+        "key": "heavy-ball",
+        "reason": "강인함과 금속성 인상에 무게감 있는 볼이 잘 맞음"
+      },
+      "altBalls": [
+        "moon-ball"
+      ],
+      "designTags": [
+        "cool",
+        "heroic"
+      ],
+      "obtainNote": "리본/이벤트 개체와는 별도",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    },
+    {
+      "dex": 470,
+      "slug": "leafeon",
+      "name": {
+        "ko": "리피아",
+        "en": "Leafeon"
+      },
+      "types": [
+        "grass"
+      ],
+      "paletteTags": [
+        "green",
+        "leaf"
+      ],
+      "recommendedBall": {
+        "key": "friend-ball",
+        "reason": "잎사귀와 자연 테마에 가장 자연스럽게 붙음"
+      },
+      "altBalls": [
+        "nest-ball"
+      ],
+      "designTags": [
+        "natural",
+        "elegant"
+      ],
+      "obtainNote": "진화 전 볼 계승 전제 확인 필요",
+      "legality": {
+        "status": "official",
+        "note": ""
+      },
+      "sourceNote": "초안 샘플"
+    }
+  ]
+}
