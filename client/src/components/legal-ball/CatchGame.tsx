@@ -257,8 +257,8 @@ export function CatchGame() {
   const [history, setHistory] = useState<CatchRecord[]>([]);
   const [selectedRegionId, setSelectedRegionId] = useState<string>(ADVENTURE_REGIONS[0].id);
   const [encounter, setEncounter] = useState<Encounter>(() => createEncounter(ADVENTURE_REGIONS[0].id));
-  const [regionEncounterCount, setRegionEncounterCount] = useState(1);
-  const [regionRunClosed, setRegionRunClosed] = useState(false);
+  const [regionEncounterCount, setRegionEncounterCount] = useState(0);
+  const [regionRunClosed, setRegionRunClosed] = useState(true);
   const [selectedBall, setSelectedBall] = useState('poke-ball');
   const [lastResult, setLastResult] = useState<CatchResult | null>(null);
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
@@ -318,8 +318,6 @@ export function CatchGame() {
   const selectedDexEntry = dexModal ? collection[dexModal.slug] ?? null : null;
   const activeDexGeneration = pokemonByGeneration.find((entry) => entry.generation === selectedDexGeneration) ?? pokemonByGeneration[0];
   const selectedRegion = regions.find((region) => region.id === selectedRegionId) ?? regions[0];
-  const selectedRegionCaught = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation && collection[pokemon.slug]).length, [collection, selectedRegion]);
-  const selectedRegionTotal = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation).length, [selectedRegion]);
   const selectedRegionRemaining = Math.max(0, selectedRegion.maxEncounters - regionEncounterCount);
   const selectedPokemonRecords = useMemo(() => {
     if (!selectedDexPokemon) return [];
@@ -349,8 +347,8 @@ export function CatchGame() {
         const restoredRegionId = saved.selectedRegionId ?? ADVENTURE_REGIONS[0].id;
         setSelectedRegionId(restoredRegionId);
         setEncounter(saved.encounter ?? createEncounter(restoredRegionId));
-        setRegionEncounterCount(saved.regionEncounterCount ?? 1);
-        setRegionRunClosed(saved.regionRunClosed ?? false);
+        setRegionEncounterCount(saved.regionEncounterCount ?? 0);
+        setRegionRunClosed(saved.regionRunClosed ?? true);
         setShopStats(saved.shopStats ?? defaultShopStats());
         setTypeCatchStats(normalizeTypeCatchStats(saved.typeCatchStats));
         setFavoriteRecords(saved.favoriteRecords ?? {});
@@ -444,16 +442,6 @@ export function CatchGame() {
     setLastReward(null);
   }
 
-  function restartRegionRun(regionId = selectedRegionId) {
-    setSelectedRegionId(regionId);
-    setEncounter(createEncounter(regionId));
-    setRegionEncounterCount(1);
-    setRegionRunClosed(false);
-    setLastResult(null);
-    setLastReward(null);
-    setActiveTab('catch');
-  }
-
   async function toggleFavoriteRecord(record: CatchRecord) {
     const recordKey = getRecordKey(record);
     const nextKey = selectedFavoriteRecordKey === recordKey ? null : recordKey;
@@ -517,8 +505,8 @@ export function CatchGame() {
     setHistory([]);
     setSelectedRegionId(ADVENTURE_REGIONS[0].id);
     setEncounter(createEncounter(ADVENTURE_REGIONS[0].id));
-    setRegionEncounterCount(1);
-    setRegionRunClosed(false);
+    setRegionEncounterCount(0);
+    setRegionRunClosed(true);
     setLastResult(null);
     setLastReward(null);
     setLastShopAction(null);
@@ -806,67 +794,15 @@ export function CatchGame() {
 
         {activeTab === 'home' ? (
           <section className="space-y-6">
-            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">지방 선택</h3>
-                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">지방별 분위기와 탐험 길이를 나눠서 돈다.</p>
-                </div>
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-                  현재 지방 {selectedRegion.name.ko} · {selectedRegionCaught}/{selectedRegionTotal} 등록 · {selectedRegionRemaining}/{selectedRegion.maxEncounters} 남음
-                </span>
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
-                {regions.map((region) => {
-                  const active = region.id === selectedRegionId;
-                  const regionCaught = allPokemon.filter((pokemon) => pokemon.generation === region.generation && collection[pokemon.slug]).length;
-                  const regionTotal = allPokemon.filter((pokemon) => pokemon.generation === region.generation).length;
-                  return (
-                    <button
-                      key={`region-${region.id}`}
-                      type="button"
-                      onClick={() => selectRegion(region.id)}
-                      className={`rounded-3xl border p-4 text-left transition ${active ? 'border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
-                    >
-                      <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${region.art.accent} p-4 text-zinc-950`}>
-                        <div className={`absolute inset-0 ${region.art.glow}`} />
-                        <div className="relative flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-700/80">Gen {region.generation}</p>
-                            <p className="mt-1 text-xl font-black">{region.name.ko}</p>
-                            <p className="mt-1 text-xs font-medium text-zinc-800/80">{region.name.en}</p>
-                          </div>
-                          <span className="text-3xl leading-none">{region.art.emoji}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="mt-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">최대 인카운터 {region.maxEncounters}</p>
-                        </div>
-                        {active ? <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">현재</span> : null}
-                      </div>
-                      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{region.summary}</p>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        <span>도감 {regionCaught}/{regionTotal}</span>
-                        <span>·</span>
-                        <span>탐험 {region.maxEncounters}회</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </article>
-
             <section className="grid gap-6 lg:grid-cols-2">
             <HubCard
               title="잡기"
-              desc={`${selectedRegion.name.ko} 지방에서만 야생 포켓몬을 만나고, 점수와 코인을 벌어온다.`}
+              desc="탐험을 시작하면 지역을 고르고, 그 지역에서만 야생 포켓몬을 만나 점수와 코인을 벌어온다."
               actionLabel="포획하러 가기"
               onAction={() => setActiveTab('catch')}
               tone="emerald"
             >
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">현재 지방: {selectedRegion.name.ko} · 인카운터 {selectedRegionRemaining}/{selectedRegion.maxEncounters} · 현재 선택 볼: {selectedBallEntry?.nameKo ?? '없음'}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">{regionRunClosed ? '다음 탐험에서 새 지역을 선택한다.' : `현재 지방: ${selectedRegion.name.ko} · 인카운터 ${selectedRegionRemaining}/${selectedRegion.maxEncounters}`}</p>
             </HubCard>
             <HubCard
               title="상점"
@@ -939,6 +875,58 @@ export function CatchGame() {
 
         {activeTab === 'catch' ? (
           <section className="space-y-6">
+            {regionRunClosed ? (
+              <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Next expedition</p>
+                    <h3 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">다음 탐험 지역 선택</h3>
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">탐험은 지역을 고른 뒤 시작하고, 끝날 때마다 새 지역을 다시 고른다.</p>
+                  </div>
+                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">현재 선택 볼 {selectedBallEntry?.nameKo ?? '없음'}</span>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+                  {regions.map((region) => {
+                    const active = region.id === selectedRegionId;
+                    const regionCaught = allPokemon.filter((pokemon) => pokemon.generation === region.generation && collection[pokemon.slug]).length;
+                    const regionTotal = allPokemon.filter((pokemon) => pokemon.generation === region.generation).length;
+                    return (
+                      <button
+                        key={`catch-region-${region.id}`}
+                        type="button"
+                        onClick={() => selectRegion(region.id)}
+                        className={`rounded-3xl border p-4 text-left transition ${active ? 'border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
+                      >
+                        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${region.art.accent} p-4 text-zinc-950`}>
+                          <div className={`absolute inset-0 ${region.art.glow}`} />
+                          <div className="relative flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-700/80">Gen {region.generation}</p>
+                              <p className="mt-1 text-xl font-black">{region.name.ko}</p>
+                              <p className="mt-1 text-xs font-medium text-zinc-800/80">{region.name.en}</p>
+                            </div>
+                            <span className="text-3xl leading-none">{region.art.emoji}</span>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">최대 인카운터 {region.maxEncounters}</p>
+                          {active ? <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">선택됨</span> : null}
+                        </div>
+                        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{region.summary}</p>
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          <span>도감 {regionCaught}/{regionTotal}</span>
+                          <span>·</span>
+                          <span>탐험 {region.maxEncounters}회</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </article>
+            ) : null}
+
+            {!regionRunClosed ? (
             <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -1020,17 +1008,6 @@ export function CatchGame() {
                   <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">어떤 볼을 던질까?</p>
                 )}
 
-                {regionRunClosed ? (
-                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
-                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">{selectedRegion.name.ko} 탐험 종료</p>
-                    <p className="mt-1 text-sm text-emerald-800/90 dark:text-emerald-200/90">이번 런은 {selectedRegion.maxEncounters}회까지 다 돌았다. 같은 지방을 다시 돌거나 다른 지방으로 넘어가면 된다.</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button onClick={() => restartRegionRun()} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">같은 지방 다시 탐험</button>
-                      <button onClick={() => setActiveTab('home')} className="rounded-full border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-800 hover:border-emerald-400 dark:border-emerald-800 dark:text-emerald-200">지방 선택으로</button>
-                    </div>
-                  </div>
-                ) : null}
-
                 {encounter.caught || encounter.escaped ? (
                   <div className="mt-4">
                     <button onClick={nextEncounter} disabled={regionRunClosed} className={`rounded-full px-5 py-2.5 text-sm font-semibold ${regionRunClosed ? 'cursor-not-allowed bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>
@@ -1040,6 +1017,7 @@ export function CatchGame() {
                 ) : null}
               </div>
             </article>
+            ) : null}
 
             <div className="space-y-6">
               <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
