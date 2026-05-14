@@ -229,6 +229,7 @@ export function CatchGame() {
   const [shopQuantities, setShopQuantities] = useState<Record<string, number>>({});
   const [shopPopup, setShopPopup] = useState<ShopPopup | null>(null);
   const [dexModal, setDexModal] = useState<DexModalState | null>(null);
+  const [selectedDexGeneration, setSelectedDexGeneration] = useState(1);
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>([]);
   const [claimedTypeSupplies, setClaimedTypeSupplies] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<GameTab>('home');
@@ -269,6 +270,7 @@ export function CatchGame() {
   const encounterGender = useMemo(() => getEncounterGender(encounter.pokemon), [encounter.pokemon]);
   const selectedDexPokemon = dexModal ? pokemonDataMap.get(dexModal.slug) ?? null : null;
   const selectedDexEntry = dexModal ? collection[dexModal.slug] ?? null : null;
+  const activeDexGeneration = pokemonByGeneration.find((entry) => entry.generation === selectedDexGeneration) ?? pokemonByGeneration[0];
   const encounterBadge = encounter.pokemon.isMythical
     ? { label: 'MYTHICAL', tone: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-200' }
     : encounter.pokemon.isLegendary
@@ -972,48 +974,65 @@ export function CatchGame() {
               <MiniStat label="세대 구간" value={`${pokemonByGeneration.length}개`} />
             </div>
 
-            {pokemonByGeneration.map(({ generation, pokemon }) => {
-              const generationCaught = pokemon.filter((item) => collection[item.slug]).length;
-              return (
-                <article key={`dex-gen-${generation}`} className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{formatGenerationLabel(locale, generation)}</h3>
-                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">번호순 정렬 · 클릭하면 도감 정보 확인</p>
-                    </div>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{generationCaught}/{pokemon.length} 등록</span>
-                  </div>
+            <div className="flex flex-wrap gap-2">
+              {pokemonByGeneration.map(({ generation, pokemon }) => {
+                const active = generation === activeDexGeneration.generation;
+                const generationCaught = pokemon.filter((item) => collection[item.slug]).length;
+                return (
+                  <button
+                    key={`dex-gen-tab-${generation}`}
+                    type="button"
+                    onClick={() => setSelectedDexGeneration(generation)}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? 'bg-emerald-600 text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'}`}
+                  >
+                    {formatGenerationLabel(locale, generation)} · {generationCaught}/{pokemon.length}
+                  </button>
+                );
+              })}
+            </div>
 
-                  <div className="mt-5 grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">
-                    {pokemon.map((item) => {
-                      const caughtEntry = collection[item.slug] ?? null;
-                      const isCaught = Boolean(caughtEntry);
-                      return (
-                        <button
-                          key={`dex-${item.slug}`}
-                          type="button"
-                          onClick={() => setDexModal({ slug: item.slug })}
-                          title={item.name.ko || item.name.en}
-                          className={`rounded-2xl border px-2 py-3 text-center transition ${isCaught ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
-                        >
-                          <div className="flex justify-center">
-                            <PokemonSprite
-                              dex={item.dex}
-                              baseSprite={item.sprite}
-                              gender="unknown"
-                              name={item.name.ko || item.name.en}
-                              size={48}
-                              className={`h-12 w-12 ${isCaught ? '' : 'grayscale opacity-70'}`}
-                            />
-                          </div>
-                          <p className="mt-2 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">#{item.dex}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </article>
-              );
-            })}
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{formatGenerationLabel(locale, activeDexGeneration.generation)}</h3>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">번호순 정렬 · 스프라이트 중심 도감 · 클릭하면 상세 확인</p>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                  {activeDexGeneration.pokemon.filter((item) => collection[item.slug]).length}/{activeDexGeneration.pokemon.length} 등록
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+                {activeDexGeneration.pokemon.map((item) => {
+                  const caughtEntry = collection[item.slug] ?? null;
+                  const isCaught = Boolean(caughtEntry);
+                  return (
+                    <button
+                      key={`dex-${item.slug}`}
+                      type="button"
+                      onClick={() => setDexModal({ slug: item.slug })}
+                      title={item.name.ko || item.name.en}
+                      className={`rounded-2xl border px-2 py-3 text-center transition ${isCaught ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
+                    >
+                      <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">#{item.dex}</p>
+                      <div className="mt-2 flex justify-center">
+                        <PokemonSprite
+                          dex={item.dex}
+                          baseSprite={item.sprite}
+                          gender="unknown"
+                          name={item.name.ko || item.name.en}
+                          size={56}
+                          className={`h-14 w-14 ${isCaught ? '' : 'grayscale opacity-70'}`}
+                        />
+                      </div>
+                      <p className={`mt-2 line-clamp-1 text-xs font-semibold ${isCaught ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                        {item.name.ko || item.name.en}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
           </section>
         ) : null}
 
@@ -1230,13 +1249,19 @@ export function CatchGame() {
                   <div>
                     <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">성별 기록</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {getAvailableGenders(selectedDexPokemon.genderRate)
-                        .filter((gender) => (selectedDexEntry.genderCounts[gender] ?? 0) > 0)
-                        .map((gender) => (
-                          <span key={`dex-modal-gender-${gender}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-                            {getGenderCountLabel(gender, selectedDexEntry.genderCounts[gender] ?? 0)}
-                          </span>
-                        ))}
+                      {getAvailableGenders(selectedDexPokemon.genderRate).map((gender) => (
+                        <span key={`dex-modal-gender-${gender}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          <PokemonSprite
+                            dex={selectedDexPokemon.dex}
+                            baseSprite={selectedDexPokemon.sprite}
+                            gender={gender}
+                            name={selectedDexPokemon.name.ko || selectedDexPokemon.name.en}
+                            size={18}
+                            className="h-[18px] w-[18px]"
+                          />
+                          {getGenderCountLabel(gender, selectedDexEntry.genderCounts[gender] ?? 0)}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
