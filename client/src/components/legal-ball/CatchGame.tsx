@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode, type WheelEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type WheelEvent } from 'react';
 
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
@@ -200,13 +200,13 @@ export function CatchGame() {
     setBagOpen(false);
   }
 
-  function moveBall(step: -1 | 1) {
+  const moveBall = useCallback((step: -1 | 1) => {
     if (!ownedBalls.length) return;
     const nextIndex = (selectedBallIndex + step + ownedBalls.length) % ownedBalls.length;
     setSelectedBall(ownedBalls[nextIndex].key);
-  }
+  }, [ownedBalls, selectedBallIndex]);
 
-  function onThrow(ballKey: string) {
+  const onThrow = useCallback((ballKey: string) => {
     if (encounter.caught || encounter.escaped) return;
     if ((inventory[ballKey] ?? 0) <= 0) return;
 
@@ -255,7 +255,7 @@ export function CatchGame() {
 
     setStreak(0);
     setEncounter((prev) => ({ ...prev, turn: prev.turn + 1 }));
-  }
+  }, [collection, encounter, inventory, streak]);
 
   function changeShopQuantity(ballKey: string, nextQuantity: number) {
     setShopQuantities((prev) => ({ ...prev, [ballKey]: Math.max(1, Math.min(99, nextQuantity)) }));
@@ -286,6 +286,36 @@ export function CatchGame() {
     event.preventDefault();
     el.scrollLeft += Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
   }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      const isTypingTarget = tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target?.isContentEditable;
+      if (isTypingTarget) return;
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        moveBall(-1);
+        return;
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        moveBall(1);
+        return;
+      }
+
+      if (event.key === 'z' || event.key === 'Z') {
+        if (!selectedBallEntry) return;
+        event.preventDefault();
+        onThrow(selectedBallEntry.key);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [moveBall, onThrow, selectedBallEntry]);
 
   const achievements = [
     { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1 },
@@ -468,7 +498,7 @@ export function CatchGame() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
-                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">상단 탭으로 다른 화면 갔다 와도 선택한 볼과 가방은 그대로 유지된다.</p>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">상단 탭으로 다른 화면 갔다 와도 선택한 볼과 가방은 그대로 유지된다. ← → 로 볼 선택, Z 로 던지기 가능.</p>
                 </div>
                 <button
                   type="button"
