@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type
 
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
-import { getPokemonList } from '@/lib/ball-data';
+import { getBallLabel, getPokemonList } from '@/lib/ball-data';
 import {
   CatchResult,
   CatchReward,
@@ -44,6 +44,19 @@ type ShopStats = {
   premierBonusEarned: number;
 };
 
+type AchievementReward = {
+  coins?: number;
+  balls?: Array<{ ballKey: string; count: number }>;
+};
+
+type AchievementDefinition = {
+  id: string;
+  title: string;
+  desc: string;
+  unlocked: boolean;
+  reward: AchievementReward;
+};
+
 type SavedState = {
   inventory: Inventory;
   score: number;
@@ -54,6 +67,7 @@ type SavedState = {
   history: CatchRecord[];
   encounter: Encounter;
   shopStats: ShopStats;
+  claimedAchievements?: string[];
   activeTab?: GameTab;
 };
 
@@ -90,8 +104,10 @@ export function CatchGame() {
   const [lastResult, setLastResult] = useState<CatchResult | null>(null);
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
   const [lastShopAction, setLastShopAction] = useState<string | null>(null);
+  const [lastAchievementAction, setLastAchievementAction] = useState<string | null>(null);
   const [shopStats, setShopStats] = useState<ShopStats>(defaultShopStats);
   const [shopQuantities, setShopQuantities] = useState<Record<string, number>>({});
+  const [claimedAchievements, setClaimedAchievements] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<GameTab>('home');
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
@@ -138,6 +154,7 @@ export function CatchGame() {
         setHistory(saved.history ?? []);
         setEncounter(saved.encounter ?? createEncounter());
         setShopStats(saved.shopStats ?? defaultShopStats());
+        setClaimedAchievements(saved.claimedAchievements ?? []);
         setActiveTab(saved.activeTab ?? 'home');
       }
     } catch {
@@ -159,10 +176,11 @@ export function CatchGame() {
       history,
       encounter,
       shopStats,
+      claimedAchievements,
       activeTab,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, activeTab]);
+  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, claimedAchievements, activeTab]);
 
   useEffect(() => {
     if ((inventory[selectedBall] ?? 0) > 0) return;
@@ -193,8 +211,10 @@ export function CatchGame() {
     setLastResult(null);
     setLastReward(null);
     setLastShopAction(null);
+    setLastAchievementAction(null);
     setShopStats(defaultShopStats());
     setShopQuantities({});
+    setClaimedAchievements([]);
     setSelectedBall('poke-ball');
     setActiveTab('home');
     setBagOpen(false);
@@ -287,6 +307,36 @@ export function CatchGame() {
     el.scrollLeft += Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
   }
 
+  function formatAchievementReward(reward: AchievementReward) {
+    const parts: string[] = [];
+    if (reward.coins) parts.push(`${reward.coins}코인`);
+    if (reward.balls?.length) {
+      parts.push(...reward.balls.map((entry) => `${getBallLabel(entry.ballKey)} ${entry.count}개`));
+    }
+    return parts.join(' · ');
+  }
+
+  function claimAchievement(achievement: AchievementDefinition) {
+    if (!achievement.unlocked || claimedAchievements.includes(achievement.id)) return;
+
+    if (achievement.reward.coins) {
+      setCoins((prev) => prev + achievement.reward.coins!);
+    }
+
+    if (achievement.reward.balls?.length) {
+      setInventory((prev) => {
+        const next = { ...prev };
+        for (const rewardBall of achievement.reward.balls!) {
+          next[rewardBall.ballKey] = (next[rewardBall.ballKey] ?? 0) + rewardBall.count;
+        }
+        return next;
+      });
+    }
+
+    setClaimedAchievements((prev) => [...prev, achievement.id]);
+    setLastAchievementAction(`${achievement.title} 보상 수령 · ${formatAchievementReward(achievement.reward)}`);
+  }
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
@@ -317,16 +367,18 @@ export function CatchGame() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [moveBall, onThrow, selectedBallEntry]);
 
-  const achievements = [
-    { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1 },
-    { id: 'collector-10', title: '도감 수집가', desc: '포켓몬 10종을 등록했다.', unlocked: caughtCount >= 10 },
-    { id: 'collector-30', title: '도감 연구원', desc: '포켓몬 30종을 등록했다.', unlocked: caughtCount >= 30 },
-    { id: 'streak-3', title: '감 잡았다', desc: '3연속 포획에 성공했다.', unlocked: bestStreak >= 3 },
-    { id: 'streak-5', title: '포획 마스터 후보', desc: '5연속 포획에 성공했다.', unlocked: bestStreak >= 5 },
-    { id: 'shop-1', title: '첫 쇼핑', desc: '상점에서 첫 구매를 했다.', unlocked: shopStats.purchaseCount >= 1 },
-    { id: 'premier-bonus', title: '서비스 챙기기', desc: '프리미어볼 서비스를 1회 이상 받았다.', unlocked: shopStats.premierBonusEarned >= 1 },
-    { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500 },
+  const achievements: AchievementDefinition[] = [
+    { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1, reward: { coins: 80, balls: [{ ballKey: 'poke-ball', count: 3 }] } },
+    { id: 'collector-10', title: '도감 수집가', desc: '포켓몬 10종을 등록했다.', unlocked: caughtCount >= 10, reward: { coins: 180, balls: [{ ballKey: 'great-ball', count: 2 }] } },
+    { id: 'collector-30', title: '도감 연구원', desc: '포켓몬 30종을 등록했다.', unlocked: caughtCount >= 30, reward: { coins: 420, balls: [{ ballKey: 'ultra-ball', count: 2 }, { ballKey: 'luxury-ball', count: 1 }] } },
+    { id: 'streak-3', title: '감 잡았다', desc: '3연속 포획에 성공했다.', unlocked: bestStreak >= 3, reward: { coins: 120, balls: [{ ballKey: 'quick-ball', count: 1 }] } },
+    { id: 'streak-5', title: '포획 마스터 후보', desc: '5연속 포획에 성공했다.', unlocked: bestStreak >= 5, reward: { coins: 260, balls: [{ ballKey: 'quick-ball', count: 2 }, { ballKey: 'ultra-ball', count: 1 }] } },
+    { id: 'shop-1', title: '첫 쇼핑', desc: '상점에서 첫 구매를 했다.', unlocked: shopStats.purchaseCount >= 1, reward: { coins: 90, balls: [{ ballKey: 'premier-ball', count: 2 }] } },
+    { id: 'premier-bonus', title: '서비스 챙기기', desc: '프리미어볼 서비스를 1회 이상 받았다.', unlocked: shopStats.premierBonusEarned >= 1, reward: { coins: 150, balls: [{ ballKey: 'luxury-ball', count: 1 }] } },
+    { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500, reward: { coins: 300, balls: [{ ballKey: 'beast-ball', count: 1 }] } },
   ];
+
+  const claimableAchievementCount = achievements.filter((achievement) => achievement.unlocked && !claimedAchievements.includes(achievement.id)).length;
 
   return (
     <>
@@ -372,7 +424,7 @@ export function CatchGame() {
           <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
           <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
           <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
-          <StatCard label="업적 해금" value={`${unlockedAchievementCount}개`} tone="zinc" />
+          <StatCard label="보상 대기" value={`${claimableAchievementCount}개`} tone="zinc" />
         </section>
 
         {activeTab === 'home' ? (
@@ -411,7 +463,7 @@ export function CatchGame() {
               onAction={() => setActiveTab('achievements')}
               tone="zinc"
             >
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length} · 대기 {claimableAchievementCount}개</p>
             </HubCard>
           </section>
         ) : null}
@@ -693,23 +745,44 @@ export function CatchGame() {
           <section className="space-y-6">
             <div className="grid gap-4 md:grid-cols-4">
               <MiniStat label="해금 업적" value={`${unlockedAchievementCount}/${achievements.length}`} />
+              <MiniStat label="수령 대기" value={`${claimableAchievementCount}개`} />
               <MiniStat label="최고 연속" value={`${bestStreak}회`} />
               <MiniStat label="도감 등록" value={`${caughtCount}종`} />
-              <MiniStat label="상점 구매" value={`${shopStats.purchaseCount}회`} />
             </div>
 
+            {lastAchievementAction ? (
+              <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+                {lastAchievementAction}
+              </div>
+            ) : null}
+
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {achievements.map((achievement) => (
-                <div key={achievement.id} className={`rounded-2xl border p-4 ${achievement.unlocked ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{achievement.title}</p>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${achievement.unlocked ? 'bg-emerald-600 text-white' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'}`}>
-                      {achievement.unlocked ? '해금' : '잠김'}
-                    </span>
+              {achievements.map((achievement) => {
+                const claimed = claimedAchievements.includes(achievement.id);
+                const claimable = achievement.unlocked && !claimed;
+                return (
+                  <div key={achievement.id} className={`rounded-2xl border p-4 ${achievement.unlocked ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{achievement.title}</p>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${claimed ? 'bg-sky-600 text-white' : achievement.unlocked ? 'bg-emerald-600 text-white' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'}`}>
+                        {claimed ? '수령 완료' : achievement.unlocked ? '수령 가능' : '잠김'}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{achievement.desc}</p>
+                    <div className="mt-3 rounded-2xl bg-white/80 px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200">
+                      보상: {formatAchievementReward(achievement.reward)}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!claimable}
+                      onClick={() => claimAchievement(achievement)}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                    >
+                      {claimed ? '수령 완료' : claimable ? '보상 받기' : '조건 미달'}
+                    </button>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{achievement.desc}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         ) : null}
