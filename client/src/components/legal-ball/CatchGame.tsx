@@ -25,17 +25,28 @@ const pokemonNameMap = new Map(getPokemonList().map((item) => [item.slug, item.n
 
 type GameTab = 'home' | 'catch' | 'shop' | 'dex' | 'achievements';
 
+type CatchGender = 'male' | 'female' | 'unknown';
+
 type CatchRecord = {
   encounterId: string;
   slug: string;
   dex: number;
   name: string;
+  gender: CatchGender;
   ballKey: string;
   success: boolean;
   score: number;
   title: string;
   coins: number;
   createdAt: string;
+};
+
+type CollectionEntry = {
+  firstBallKey: string;
+  caughtBalls: string[];
+  caughtByBall: Record<string, number>;
+  genderCounts: Record<CatchGender, number>;
+  totalCaught: number;
 };
 
 type ShopStats = {
@@ -63,7 +74,7 @@ type SavedState = {
   coins: number;
   streak: number;
   bestStreak: number;
-  collection: Record<string, string>;
+  collection: Record<string, CollectionEntry>;
   history: CatchRecord[];
   encounter: Encounter;
   shopStats: ShopStats;
@@ -73,6 +84,54 @@ type SavedState = {
 
 function cloneDefaultInventory() {
   return JSON.parse(JSON.stringify(DEFAULT_INVENTORY)) as Inventory;
+}
+
+function getEncounterGender(pokemon: Encounter['pokemon']): CatchGender {
+  if (pokemon.isLegendary || pokemon.isMythical) return 'unknown';
+  return Math.random() < 0.5 ? 'male' : 'female';
+}
+
+function createCollectionEntry(ballKey: string, gender: CatchGender): CollectionEntry {
+  return {
+    firstBallKey: ballKey,
+    caughtBalls: [ballKey],
+    caughtByBall: { [ballKey]: 1 },
+    genderCounts: {
+      male: gender === 'male' ? 1 : 0,
+      female: gender === 'female' ? 1 : 0,
+      unknown: gender === 'unknown' ? 1 : 0,
+    },
+    totalCaught: 1,
+  };
+}
+
+function normalizeCollection(raw: unknown): Record<string, CollectionEntry> {
+  if (!raw || typeof raw !== 'object') return {};
+  const entries = Object.entries(raw as Record<string, unknown>);
+  return Object.fromEntries(entries.map(([slug, value]) => {
+    if (typeof value === 'string') {
+      return [slug, createCollectionEntry(value, 'unknown')];
+    }
+    const parsed = value as Partial<CollectionEntry>;
+    const firstBallKey = typeof parsed.firstBallKey === 'string' ? parsed.firstBallKey : (Array.isArray(parsed.caughtBalls) && typeof parsed.caughtBalls[0] === 'string' ? parsed.caughtBalls[0] : 'poke-ball');
+    const caughtBalls = Array.isArray(parsed.caughtBalls) ? parsed.caughtBalls.filter((item): item is string => typeof item === 'string') : [firstBallKey];
+    const caughtByBall = parsed.caughtByBall && typeof parsed.caughtByBall === 'object' ? parsed.caughtByBall as Record<string, number> : Object.fromEntries(caughtBalls.map((ballKey) => [ballKey, 1]));
+    const genderCounts = parsed.genderCounts && typeof parsed.genderCounts === 'object'
+      ? {
+          male: Number((parsed.genderCounts as Record<string, number>).male ?? 0),
+          female: Number((parsed.genderCounts as Record<string, number>).female ?? 0),
+          unknown: Number((parsed.genderCounts as Record<string, number>).unknown ?? 0),
+        }
+      : { male: 0, female: 0, unknown: 0 };
+    const totalCaught = typeof parsed.totalCaught === 'number' ? parsed.totalCaught : Object.values(caughtByBall).reduce((sum, count) => sum + count, 0);
+    return [slug, { firstBallKey, caughtBalls: caughtBalls.length ? caughtBalls : [firstBallKey], caughtByBall, genderCounts, totalCaught } satisfies CollectionEntry];
+  }));
+}
+
+function genderLabel(gender: CatchGender) {
+  if (gender === 'male') return '♂';
+  if (gender === 'female') return '♀';
+  return '—';
 }
 
 function defaultShopStats(): ShopStats {
@@ -97,7 +156,7 @@ export function CatchGame() {
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
-  const [collection, setCollection] = useState<Record<string, string>>({});
+  const [collection, setCollection] = useState<Record<string, CollectionEntry>>({});
   const [history, setHistory] = useState<CatchRecord[]>([]);
   const [encounter, setEncounter] = useState<Encounter>(() => createEncounter());
   const [selectedBall, setSelectedBall] = useState('poke-ball');
@@ -132,6 +191,7 @@ export function CatchGame() {
   }, [bestStreak, caughtCount, coins, shopStats.purchaseCount, shopStats.premierBonusEarned]);
   const selectedBallIndex = Math.max(0, ownedBalls.findIndex((ball) => ball.key === selectedBall));
   const selectedBallEntry = ownedBalls[selectedBallIndex] ?? ownedBalls[0] ?? null;
+  const encounterGender = useMemo(() => getEncounterGender(encounter.pokemon), [encounter.pokemon]);
   const encounterBadge = encounter.pokemon.isMythical
     ? { label: 'MYTHICAL', tone: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-200' }
     : encounter.pokemon.isLegendary
@@ -150,7 +210,7 @@ export function CatchGame() {
         setCoins(saved.coins ?? 0);
         setStreak(saved.streak ?? 0);
         setBestStreak(saved.bestStreak ?? saved.streak ?? 0);
-        setCollection(saved.collection ?? {});
+        setCollection(normalizeCollection(saved.collection));
         setHistory(saved.history ?? []);
         setEncounter(saved.encounter ?? createEncounter());
         setShopStats(saved.shopStats ?? defaultShopStats());
@@ -249,6 +309,7 @@ export function CatchGame() {
       slug: encounter.pokemon.slug,
       dex: encounter.pokemon.dex,
       name: encounter.pokemon.name.ko || encounter.pokemon.name.en,
+      gender: encounterGender,
       ballKey,
       success: result.success,
       score: result.score,
@@ -262,7 +323,22 @@ export function CatchGame() {
       const nextStreak = streak + 1;
       setStreak(nextStreak);
       setBestStreak((prev) => Math.max(prev, nextStreak));
-      setCollection((prev) => ({ ...prev, [encounter.pokemon.slug]: ballKey }));
+      setCollection((prev) => {
+        const current = prev[encounter.pokemon.slug];
+        if (!current) {
+          return { ...prev, [encounter.pokemon.slug]: createCollectionEntry(ballKey, encounterGender) };
+        }
+        return {
+          ...prev,
+          [encounter.pokemon.slug]: {
+            ...current,
+            caughtBalls: current.caughtBalls.includes(ballKey) ? current.caughtBalls : [...current.caughtBalls, ballKey],
+            caughtByBall: { ...current.caughtByBall, [ballKey]: (current.caughtByBall[ballKey] ?? 0) + 1 },
+            genderCounts: { ...current.genderCounts, [encounterGender]: current.genderCounts[encounterGender] + 1 },
+            totalCaught: current.totalCaught + 1,
+          },
+        };
+      });
       setEncounter((prev) => ({ ...prev, caught: true }));
       return;
     }
@@ -275,7 +351,7 @@ export function CatchGame() {
 
     setStreak(0);
     setEncounter((prev) => ({ ...prev, turn: prev.turn + 1 }));
-  }, [collection, encounter, inventory, streak]);
+  }, [collection, encounter, encounterGender, inventory, streak]);
 
   function changeShopQuantity(ballKey: string, nextQuantity: number) {
     setShopQuantities((prev) => ({ ...prev, [ballKey]: Math.max(1, Math.min(99, nextQuantity)) }));
@@ -480,7 +556,7 @@ export function CatchGame() {
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${encounterBadge.tone}`}>{encounterBadge.label}</span>
                     <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                      #{encounter.pokemon.dex} · Gen {encounter.pokemon.generation} · {encounter.pokemon.types.join(' / ')}
+                      #{encounter.pokemon.dex} · {genderLabel(encounterGender)} · Gen {encounter.pokemon.generation} · {encounter.pokemon.types.join(' / ')}
                     </p>
                   </div>
                 </div>
@@ -711,10 +787,25 @@ export function CatchGame() {
                 <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{caughtCount}종 등록</span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {Object.entries(collection).length ? Object.entries(collection).slice(0, 24).map(([slug, ballKey]) => (
-                  <div key={slug} className="flex items-center justify-between rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemonNameMap.get(slug) ?? slug}</span>
-                    <BallIcon ballKey={ballKey} size={20} />
+                {Object.entries(collection).length ? Object.entries(collection).slice(0, 24).map(([slug, entry]) => (
+                  <div key={slug} className="rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemonNameMap.get(slug) ?? slug}</p>
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          총 {entry.totalCaught}회 · ♂ {entry.genderCounts.male} / ♀ {entry.genderCounts.female} / 무성 {entry.genderCounts.unknown}
+                        </p>
+                      </div>
+                      <BallIcon ballKey={entry.firstBallKey} size={20} />
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {entry.caughtBalls.map((ballKey) => (
+                        <span key={`${slug}-${ballKey}`} className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                          <BallIcon ballKey={ballKey} size={14} />
+                          x{entry.caughtByBall[ballKey] ?? 0}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 잡은 포켓몬이 없다.</p>}
               </div>
@@ -726,7 +817,7 @@ export function CatchGame() {
                 {history.length ? history.map((item) => (
                   <div key={`${item.encounterId}-${item.ballKey}-${item.createdAt}`} className="flex items-center justify-between gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name}</p>
+                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name} {genderLabel(item.gender)}</p>
                       <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.success ? '포획 성공' : '포획 실패'} · {item.title}</p>
                     </div>
                     <div className="flex items-center gap-3">
