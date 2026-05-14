@@ -1,14 +1,30 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type WheelEvent } from 'react';
 
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
 import { getPokemonList } from '@/lib/ball-data';
-import { CatchResult, CatchReward, DEFAULT_INVENTORY, Encounter, Inventory, SHOP_BUNDLE_STEPS, createEncounter, getCatchReward, getOwnedBalls, getPremierBonusForPurchase, getShopOffers, throwBall } from '@/lib/catch-game';
+import {
+  CatchResult,
+  CatchReward,
+  DEFAULT_INVENTORY,
+  Encounter,
+  Inventory,
+  SHOP_BUNDLE_STEPS,
+  createEncounter,
+  getCatchReward,
+  getOwnedBalls,
+  getPremierBonusForPurchase,
+  getShopOffers,
+  throwBall,
+} from '@/lib/catch-game';
 
-const STORAGE_KEY = 'poke-bowl-catch-game-v1';
+const STORAGE_KEY = 'poke-bowl-catch-game-v2';
+const LEGACY_STORAGE_KEY = 'poke-bowl-catch-game-v1';
 const pokemonNameMap = new Map(getPokemonList().map((item) => [item.slug, item.name.ko || item.name.en]));
+
+type GameTab = 'home' | 'catch' | 'shop' | 'dex' | 'achievements';
 
 type CatchRecord = {
   encounterId: string;
@@ -23,25 +39,51 @@ type CatchRecord = {
   createdAt: string;
 };
 
+type ShopStats = {
+  purchaseCount: number;
+  purchasedBalls: number;
+  premierBonusEarned: number;
+};
+
 type SavedState = {
   inventory: Inventory;
   score: number;
   coins: number;
   streak: number;
+  bestStreak: number;
   collection: Record<string, string>;
   history: CatchRecord[];
   encounter: Encounter;
+  shopStats: ShopStats;
+  activeTab?: GameTab;
 };
 
 function cloneDefaultInventory() {
   return JSON.parse(JSON.stringify(DEFAULT_INVENTORY)) as Inventory;
 }
 
+function defaultShopStats(): ShopStats {
+  return {
+    purchaseCount: 0,
+    purchasedBalls: 0,
+    premierBonusEarned: 0,
+  };
+}
+
+const TABS: { id: GameTab; label: string }[] = [
+  { id: 'home', label: '홈' },
+  { id: 'catch', label: '잡기' },
+  { id: 'shop', label: '상점' },
+  { id: 'dex', label: '도감' },
+  { id: 'achievements', label: '업적' },
+];
+
 export function CatchGame() {
   const [inventory, setInventory] = useState<Inventory>(cloneDefaultInventory);
   const [score, setScore] = useState(0);
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const [collection, setCollection] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<CatchRecord[]>([]);
   const [encounter, setEncounter] = useState<Encounter>(() => createEncounter());
@@ -49,6 +91,8 @@ export function CatchGame() {
   const [lastResult, setLastResult] = useState<CatchResult | null>(null);
   const [lastReward, setLastReward] = useState<CatchReward | null>(null);
   const [lastShopAction, setLastShopAction] = useState<string | null>(null);
+  const [shopStats, setShopStats] = useState<ShopStats>(defaultShopStats);
+  const [activeTab, setActiveTab] = useState<GameTab>('home');
   const [hydrated, setHydrated] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
   const bagScrollRef = useRef<HTMLDivElement | null>(null);
@@ -57,6 +101,19 @@ export function CatchGame() {
   const shopOffers = useMemo(() => getShopOffers(), []);
   const totalBalls = useMemo(() => Object.values(inventory).reduce((sum, count) => sum + count, 0), [inventory]);
   const caughtCount = Object.keys(collection).length;
+  const successfulCatchCount = history.filter((item) => item.success).length;
+  const unlockedAchievementCount = useMemo(() => {
+    let unlocked = 0;
+    if (caughtCount >= 1) unlocked += 1;
+    if (caughtCount >= 10) unlocked += 1;
+    if (caughtCount >= 30) unlocked += 1;
+    if (bestStreak >= 3) unlocked += 1;
+    if (bestStreak >= 5) unlocked += 1;
+    if (shopStats.purchaseCount >= 1) unlocked += 1;
+    if (shopStats.premierBonusEarned >= 1) unlocked += 1;
+    if (coins >= 500) unlocked += 1;
+    return unlocked;
+  }, [bestStreak, caughtCount, coins, shopStats.purchaseCount, shopStats.premierBonusEarned]);
   const selectedBallIndex = Math.max(0, ownedBalls.findIndex((ball) => ball.key === selectedBall));
   const selectedBallEntry = ownedBalls[selectedBallIndex] ?? ownedBalls[0] ?? null;
   const encounterBadge = encounter.pokemon.isMythical
@@ -69,16 +126,19 @@ export function CatchGame() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as SavedState;
+        const saved = JSON.parse(raw) as Partial<SavedState>;
         setInventory(saved.inventory ?? cloneDefaultInventory());
         setScore(saved.score ?? 0);
         setCoins(saved.coins ?? 0);
         setStreak(saved.streak ?? 0);
+        setBestStreak(saved.bestStreak ?? saved.streak ?? 0);
         setCollection(saved.collection ?? {});
         setHistory(saved.history ?? []);
         setEncounter(saved.encounter ?? createEncounter());
+        setShopStats(saved.shopStats ?? defaultShopStats());
+        setActiveTab(saved.activeTab ?? 'home');
       }
     } catch {
       // ignore broken local state
@@ -89,9 +149,20 @@ export function CatchGame() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const state: SavedState = { inventory, score, coins, streak, collection, history, encounter };
+    const state: SavedState = {
+      inventory,
+      score,
+      coins,
+      streak,
+      bestStreak,
+      collection,
+      history,
+      encounter,
+      shopStats,
+      activeTab,
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, inventory, score, coins, streak, collection, history, encounter]);
+  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, activeTab]);
 
   useEffect(() => {
     if ((inventory[selectedBall] ?? 0) > 0) return;
@@ -107,6 +178,7 @@ export function CatchGame() {
     setEncounter(createEncounter());
     setLastResult(null);
     setLastReward(null);
+    setActiveTab('catch');
   }
 
   function resetRun() {
@@ -114,13 +186,16 @@ export function CatchGame() {
     setScore(0);
     setCoins(0);
     setStreak(0);
+    setBestStreak(0);
     setCollection({});
     setHistory([]);
     setEncounter(createEncounter());
     setLastResult(null);
     setLastReward(null);
     setLastShopAction(null);
+    setShopStats(defaultShopStats());
     setSelectedBall('poke-ball');
+    setActiveTab('home');
     setBagOpen(false);
   }
 
@@ -163,7 +238,9 @@ export function CatchGame() {
     setHistory((prev) => [record, ...prev].slice(0, 20));
 
     if (result.success) {
-      setStreak((prev) => prev + 1);
+      const nextStreak = streak + 1;
+      setStreak(nextStreak);
+      setBestStreak((prev) => Math.max(prev, nextStreak));
       setCollection((prev) => ({ ...prev, [encounter.pokemon.slug]: ballKey }));
       setEncounter((prev) => ({ ...prev, caught: true }));
       return;
@@ -188,11 +265,16 @@ export function CatchGame() {
       [ballKey]: (prev[ballKey] ?? 0) + quantity,
       'premier-ball': (prev['premier-ball'] ?? 0) + premierBonus,
     }));
+    setShopStats((prev) => ({
+      purchaseCount: prev.purchaseCount + 1,
+      purchasedBalls: prev.purchasedBalls + quantity,
+      premierBonusEarned: prev.premierBonusEarned + premierBonus,
+    }));
     setSelectedBall(ballKey);
     setLastShopAction(`${ballName} ${quantity}개 구매 · -${price}코인${premierBonus > 0 ? ` · 프리미어볼 ${premierBonus}개 서비스` : ''}`);
   }
 
-  function handleBagWheel(event: React.WheelEvent<HTMLDivElement>) {
+  function handleBagWheel(event: WheelEvent<HTMLDivElement>) {
     const el = bagScrollRef.current;
     if (!el) return;
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) && event.deltaX === 0) return;
@@ -200,262 +282,386 @@ export function CatchGame() {
     el.scrollLeft += Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
   }
 
+  const achievements = [
+    { id: 'first-catch', title: '첫 포획', desc: '포켓몬 1종을 처음 등록했다.', unlocked: caughtCount >= 1 },
+    { id: 'collector-10', title: '도감 수집가', desc: '포켓몬 10종을 등록했다.', unlocked: caughtCount >= 10 },
+    { id: 'collector-30', title: '도감 연구원', desc: '포켓몬 30종을 등록했다.', unlocked: caughtCount >= 30 },
+    { id: 'streak-3', title: '감 잡았다', desc: '3연속 포획에 성공했다.', unlocked: bestStreak >= 3 },
+    { id: 'streak-5', title: '포획 마스터 후보', desc: '5연속 포획에 성공했다.', unlocked: bestStreak >= 5 },
+    { id: 'shop-1', title: '첫 쇼핑', desc: '상점에서 첫 구매를 했다.', unlocked: shopStats.purchaseCount >= 1 },
+    { id: 'premier-bonus', title: '서비스 챙기기', desc: '프리미어볼 서비스를 1회 이상 받았다.', unlocked: shopStats.premierBonusEarned >= 1 },
+    { id: 'rich-500', title: '코인 모으는 중', desc: '보유 코인 500 이상을 달성했다.', unlocked: coins >= 500 },
+  ];
+
   return (
     <>
       <div className="space-y-8">
-        <section className="grid gap-4 md:grid-cols-5">
-          <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
-          <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
-          <StatCard label="연속 포획" value={`${streak}회`} tone="sky" />
-          <StatCard label="컬렉션" value={`${caughtCount}종`} tone="emerald" />
-          <StatCard label="남은 볼" value={`${totalBalls}개`} tone="zinc" />
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Wild encounter</p>
-                <h2 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                  야생의 {encounter.pokemon.name.ko || encounter.pokemon.name.en} 등장!
-                </h2>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${encounterBadge.tone}`}>{encounterBadge.label}</span>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                    #{encounter.pokemon.dex} · Gen {encounter.pokemon.generation} · {encounter.pokemon.types.join(' / ')}
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-3xl bg-zinc-50 p-3 dark:bg-zinc-800/80">
-                <img src={encounter.pokemon.sprite} alt={encounter.pokemon.name.en} className="h-28 w-28" style={{ imageRendering: 'pixelated' }} />
-              </div>
+        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Game hub</p>
+              <h2 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">포획 미니게임 허브</h2>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                잡기 / 상점 / 도감 / 업적을 한 곳에서 돌면서 코인과 컬렉션을 키운다.
+              </p>
             </div>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              {encounter.pokemon.recommendedBall ? <BallChip ballKey={encounter.pokemon.recommendedBall.key} /> : null}
-              {encounter.pokemon.altBalls.slice(0, 3).map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} />)}
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">현재 턴</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{encounter.turn}번째 던지기</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={nextEncounter} className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100">
-                    새 포켓몬
-                  </button>
-                  <button onClick={resetRun} className="rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 dark:border-rose-900 dark:text-rose-200">
-                    가방 리셋
-                  </button>
-                </div>
-              </div>
-
-              {lastResult ? (
-                <div className="mt-4 rounded-2xl bg-white p-4 dark:bg-zinc-900">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{lastResult.success ? `포획 성공 · ${lastResult.title}` : lastResult.title}</p>
-                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{lastResult.detail}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">성공 확률</p>
-                      <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{Math.round(lastResult.chance * 100)}%</p>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
-                    판정 점수 +{lastResult.score} · 주사위 {Math.round(lastResult.roll * 100)} / 100
-                  </p>
-                  {lastReward ? (
-                    <div className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
-                      <span className="font-semibold">{lastReward.label}</span> · +{lastReward.coins}코인
-                      {lastReward.scoreBonus > 0 ? ` · 미적 보너스 +${lastReward.scoreBonus}` : ''}
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">어떤 볼을 던질까?</p>
-              )}
-
-              {encounter.caught || encounter.escaped ? (
-                <div className="mt-4">
-                  <button onClick={nextEncounter} className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
-                    다음 야생 포켓몬 만나기
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">평소엔 선택한 볼만 보고, 필요할 때만 가방을 연다.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setBagOpen(true)}
-                className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
-              >
-                가방 열기
+            <div className="flex flex-wrap gap-2">
+              <button onClick={nextEncounter} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                바로 잡기 시작
+              </button>
+              <button onClick={resetRun} className="rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 dark:border-rose-900 dark:text-rose-200">
+                진행 초기화
               </button>
             </div>
-
-            <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-950/60">
-              {selectedBallEntry ? (
-                <>
-                  <div className="flex items-center justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() => moveBall(-1)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
-                    >
-                      ←
-                    </button>
-                    <div className="flex flex-1 flex-col items-center text-center">
-                      <div className="rounded-full bg-white p-5 shadow-sm dark:bg-zinc-900">
-                        <BallIcon ballKey={selectedBallEntry.key} size={72} />
-                      </div>
-                      <div className="mt-4 flex min-h-[72px] flex-col items-center justify-start">
-                        <p className="line-clamp-2 max-w-[180px] text-xl font-bold leading-7 text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
-                        <p className="mt-1 line-clamp-1 max-w-[180px] text-sm text-zinc-500 dark:text-zinc-400">{selectedBallEntry.nameEn}</p>
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-                          x{inventory[selectedBallEntry.key] ?? 0}
-                        </span>
-                        <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                          {selectedBallIndex + 1} / {ownedBalls.length}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => moveBall(1)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
-                    >
-                      →
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
-                    onClick={() => onThrow(selectedBallEntry.key)}
-                    className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
-                  >
-                    {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
-                  </button>
-                </>
-              ) : (
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 가방을 리셋해 다시 시작할 수 있다.</p>
-              )}
-            </div>
-          </article>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">최근 포획 기록</h3>
-            <div className="mt-4 space-y-3">
-              {history.length ? history.map((item) => (
-                <div key={`${item.encounterId}-${item.ballKey}-${item.createdAt}`} className="flex items-center justify-between gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name}</p>
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.success ? '포획 성공' : '포획 실패'} · {item.title}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">+{item.coins}코인</span>
-                    <BallIcon ballKey={item.ballKey} size={20} />
-                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">+{item.score}</span>
-                  </div>
-                </div>
-              )) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 던진 기록이 없다.</p>}
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">도감 등록 현황</h3>
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{caughtCount}종 등록</span>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {Object.entries(collection).length ? Object.entries(collection).slice(0, 16).map(([slug, ballKey]) => (
-                <div key={slug} className="flex items-center justify-between rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemonNameMap.get(slug) ?? slug}</span>
-                  <BallIcon ballKey={ballKey} size={20} />
-                </div>
-              )) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 잡은 포켓몬이 없다.</p>}
-            </div>
-            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">첫 등록은 큰 코인 보상, 중복 포획은 소액 보상으로 처리해서 상점/업적 루프의 기초로 쓴다.</p>
-          </article>
-        </section>
-
-        <section className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">볼 상점</h3>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">도감에서 번 코인으로 가방을 다시 채운다. 자주 쓰는 볼은 묶음으로 조금 더 싸게 준다.</p>
-            </div>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">보유 코인 {coins}</span>
           </div>
 
-          {lastShopAction ? (
-            <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
-              {lastShopAction}
-            </div>
-          ) : null}
-
-          <div className="mt-4 rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-200">
-            상점 규칙: 구매 수량이 누적 <span className="font-semibold">10개</span>를 넘길 때마다 <span className="font-semibold">프리미어볼 1개</span>를 서비스로 준다.
-          </div>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {shopOffers.map((offer) => {
-              const owned = inventory[offer.ballKey] ?? 0;
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+            {TABS.map((tab) => {
+              const active = activeTab === tab.id;
               return (
-                <div key={offer.ballKey} className={`rounded-2xl border p-4 ${offer.featured ? 'border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/60'}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <BallIcon ballKey={offer.ballKey} size={30} />
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{offer.ball.nameKo}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">현재 x{owned} · 기본 묶음 {offer.quantity}개</p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">{offer.price}코인</span>
-                  </div>
-
-                  <div className="mt-4 grid gap-2">
-                    {SHOP_BUNDLE_STEPS.map((bundleStep) => {
-                      const totalQuantity = offer.quantity * bundleStep;
-                      const totalPrice = offer.price * bundleStep;
-                      const premierBonus = getPremierBonusForPurchase(totalQuantity);
-                      const affordable = coins >= totalPrice;
-                      return (
-                        <button
-                          key={`${offer.ballKey}-${bundleStep}`}
-                          type="button"
-                          disabled={!affordable}
-                          onClick={() => buyOffer(offer.ballKey, totalQuantity, totalPrice, offer.ball.nameKo)}
-                          className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{bundleStep}묶음 · {totalQuantity}개</p>
-                            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{premierBonus > 0 ? `프리미어볼 ${premierBonus}개 서비스 포함` : '서비스 없음'}</p>
-                          </div>
-                          <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{affordable ? `${totalPrice}코인` : `${totalPrice - coins}코인 부족`}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? 'bg-emerald-600 text-white' : 'border border-zinc-300 text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100'}`}
+                >
+                  {tab.label}
+                </button>
               );
             })}
           </div>
         </section>
+
+        <section className="grid gap-4 md:grid-cols-5">
+          <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
+          <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
+          <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
+          <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
+          <StatCard label="업적 해금" value={`${unlockedAchievementCount}개`} tone="zinc" />
+        </section>
+
+        {activeTab === 'home' ? (
+          <section className="grid gap-6 lg:grid-cols-2">
+            <HubCard
+              title="잡기"
+              desc="지금 들고 있는 볼로 야생 포켓몬을 만나고, 점수와 코인을 벌어온다."
+              actionLabel="포획하러 가기"
+              onAction={() => setActiveTab('catch')}
+              tone="emerald"
+            >
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">현재 선택 볼: {selectedBallEntry?.nameKo ?? '없음'} · 남은 볼 {totalBalls}개</p>
+            </HubCard>
+            <HubCard
+              title="상점"
+              desc="코인으로 볼을 묶음 구매하고, 10개 단위마다 프리미어볼 서비스를 챙긴다."
+              actionLabel="상점 보기"
+              onAction={() => setActiveTab('shop')}
+              tone="amber"
+            >
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">총 구매 {shopStats.purchaseCount}회 · 서비스 프리미어볼 {shopStats.premierBonusEarned}개</p>
+            </HubCard>
+            <HubCard
+              title="도감"
+              desc="잡은 포켓몬과 어떤 볼로 등록했는지 한눈에 본다."
+              actionLabel="도감 보기"
+              onAction={() => setActiveTab('dex')}
+              tone="sky"
+            >
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">등록 {caughtCount}종 · 성공 포획 {successfulCatchCount}회</p>
+            </HubCard>
+            <HubCard
+              title="업적"
+              desc="연속 포획, 수집, 쇼핑 등 게임 루프 진행도를 업적으로 확인한다."
+              actionLabel="업적 보기"
+              onAction={() => setActiveTab('achievements')}
+              tone="zinc"
+            >
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">해금 {unlockedAchievementCount} / {achievements.length}</p>
+            </HubCard>
+          </section>
+        ) : null}
+
+        {activeTab === 'catch' ? (
+          <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Wild encounter</p>
+                  <h3 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                    야생의 {encounter.pokemon.name.ko || encounter.pokemon.name.en} 등장!
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${encounterBadge.tone}`}>{encounterBadge.label}</span>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                      #{encounter.pokemon.dex} · Gen {encounter.pokemon.generation} · {encounter.pokemon.types.join(' / ')}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-3xl bg-zinc-50 p-3 dark:bg-zinc-800/80">
+                  <img src={encounter.pokemon.sprite} alt={encounter.pokemon.name.en} className="h-28 w-28" style={{ imageRendering: 'pixelated' }} />
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                {encounter.pokemon.recommendedBall ? <BallChip ballKey={encounter.pokemon.recommendedBall.key} /> : null}
+                {encounter.pokemon.altBalls.slice(0, 3).map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} />)}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">현재 턴</p>
+                    <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{encounter.turn}번째 던지기</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={nextEncounter} className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100">
+                      새 포켓몬
+                    </button>
+                    <button onClick={() => setActiveTab('shop')} className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-700 hover:border-amber-400 dark:border-amber-900 dark:text-amber-200">
+                      상점 이동
+                    </button>
+                  </div>
+                </div>
+
+                {lastResult ? (
+                  <div className="mt-4 rounded-2xl bg-white p-4 dark:bg-zinc-900">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{lastResult.success ? `포획 성공 · ${lastResult.title}` : lastResult.title}</p>
+                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{lastResult.detail}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">성공 확률</p>
+                        <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{Math.round(lastResult.chance * 100)}%</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
+                      판정 점수 +{lastResult.score} · 주사위 {Math.round(lastResult.roll * 100)} / 100
+                    </p>
+                    {lastReward ? (
+                      <div className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
+                        <span className="font-semibold">{lastReward.label}</span> · +{lastReward.coins}코인
+                        {lastReward.scoreBonus > 0 ? ` · 미적 보너스 +${lastReward.scoreBonus}` : ''}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">어떤 볼을 던질까?</p>
+                )}
+
+                {encounter.caught || encounter.escaped ? (
+                  <div className="mt-4">
+                    <button onClick={nextEncounter} className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
+                      다음 야생 포켓몬 만나기
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">상단 탭으로 다른 화면 갔다 와도 선택한 볼과 가방은 그대로 유지된다.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setBagOpen(true)}
+                  className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
+                >
+                  가방 열기
+                </button>
+              </div>
+
+              <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-950/60">
+                {selectedBallEntry ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => moveBall(-1)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                      >
+                        ←
+                      </button>
+                      <div className="flex flex-1 flex-col items-center text-center">
+                        <div className="rounded-full bg-white p-5 shadow-sm dark:bg-zinc-900">
+                          <BallIcon ballKey={selectedBallEntry.key} size={72} />
+                        </div>
+                        <div className="mt-4 flex min-h-[72px] flex-col items-center justify-start">
+                          <p className="line-clamp-2 max-w-[180px] text-xl font-bold leading-7 text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
+                          <p className="mt-1 line-clamp-1 max-w-[180px] text-sm text-zinc-500 dark:text-zinc-400">{selectedBallEntry.nameEn}</p>
+                        </div>
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                            x{inventory[selectedBallEntry.key] ?? 0}
+                          </span>
+                          <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                            {selectedBallIndex + 1} / {ownedBalls.length}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => moveBall(1)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-300 text-xl font-bold text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200"
+                      >
+                        →
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={encounter.caught || encounter.escaped || (inventory[selectedBallEntry.key] ?? 0) <= 0}
+                      onClick={() => onThrow(selectedBallEntry.key)}
+                      className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:disabled:bg-zinc-700"
+                    >
+                      {encounter.caught ? '이미 잡았다' : encounter.escaped ? '이미 도망갔다' : '선택한 볼 던지기'}
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 상점에서 재보급하거나 진행을 리셋해 다시 시작할 수 있다.</p>
+                )}
+              </div>
+            </article>
+          </section>
+        ) : null}
+
+        {activeTab === 'shop' ? (
+          <section className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">볼 상점</h3>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">묶음으로 사고, 10개 단위마다 프리미어볼 서비스를 챙긴다.</p>
+              </div>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">보유 코인 {coins}</span>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <MiniStat label="구매 횟수" value={`${shopStats.purchaseCount}회`} />
+              <MiniStat label="구매한 볼" value={`${shopStats.purchasedBalls}개`} />
+              <MiniStat label="서비스 프리미어" value={`${shopStats.premierBonusEarned}개`} />
+            </div>
+
+            {lastShopAction ? (
+              <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
+                {lastShopAction}
+              </div>
+            ) : null}
+
+            <div className="mt-4 rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-950/60 dark:text-zinc-200">
+              상점 규칙: 구매 수량이 <span className="font-semibold">10개</span>를 넘길 때마다 <span className="font-semibold">프리미어볼 1개</span>를 서비스로 준다.
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {shopOffers.map((offer) => {
+                const owned = inventory[offer.ballKey] ?? 0;
+                return (
+                  <div key={offer.ballKey} className={`rounded-2xl border p-4 ${offer.featured ? 'border-emerald-300 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/60'}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <BallIcon ballKey={offer.ballKey} size={30} />
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{offer.ball.nameKo}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">현재 x{owned} · 기본 묶음 {offer.quantity}개</p>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">{offer.price}코인</span>
+                    </div>
+
+                    <div className="mt-4 grid gap-2">
+                      {SHOP_BUNDLE_STEPS.map((bundleStep) => {
+                        const totalQuantity = offer.quantity * bundleStep;
+                        const totalPrice = offer.price * bundleStep;
+                        const premierBonus = getPremierBonusForPurchase(totalQuantity);
+                        const affordable = coins >= totalPrice;
+                        return (
+                          <button
+                            key={`${offer.ballKey}-${bundleStep}`}
+                            type="button"
+                            disabled={!affordable}
+                            onClick={() => buyOffer(offer.ballKey, totalQuantity, totalPrice, offer.ball.nameKo)}
+                            className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{bundleStep}묶음 · {totalQuantity}개</p>
+                              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{premierBonus > 0 ? `프리미어볼 ${premierBonus}개 서비스 포함` : '서비스 없음'}</p>
+                            </div>
+                            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{affordable ? `${totalPrice}코인` : `${totalPrice - coins}코인 부족`}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {activeTab === 'dex' ? (
+          <section className="grid gap-6 lg:grid-cols-2">
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">도감 등록 현황</h3>
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{caughtCount}종 등록</span>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {Object.entries(collection).length ? Object.entries(collection).slice(0, 24).map(([slug, ballKey]) => (
+                  <div key={slug} className="flex items-center justify-between rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemonNameMap.get(slug) ?? slug}</span>
+                    <BallIcon ballKey={ballKey} size={20} />
+                  </div>
+                )) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 잡은 포켓몬이 없다.</p>}
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">최근 포획 기록</h3>
+              <div className="mt-4 space-y-3">
+                {history.length ? history.map((item) => (
+                  <div key={`${item.encounterId}-${item.ballKey}-${item.createdAt}`} className="flex items-center justify-between gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-950/60">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{item.name}</p>
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{item.success ? '포획 성공' : '포획 실패'} · {item.title}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">+{item.coins}코인</span>
+                      <BallIcon ballKey={item.ballKey} size={20} />
+                      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">+{item.score}</span>
+                    </div>
+                  </div>
+                )) : <p className="text-sm text-zinc-600 dark:text-zinc-300">아직 던진 기록이 없다.</p>}
+              </div>
+            </article>
+          </section>
+        ) : null}
+
+        {activeTab === 'achievements' ? (
+          <section className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <MiniStat label="해금 업적" value={`${unlockedAchievementCount}/${achievements.length}`} />
+              <MiniStat label="최고 연속" value={`${bestStreak}회`} />
+              <MiniStat label="도감 등록" value={`${caughtCount}종`} />
+              <MiniStat label="서비스 볼" value={`${shopStats.premierBonusEarned}개`} />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {achievements.map((achievement) => (
+                <div key={achievement.id} className={`rounded-2xl border p-4 ${achievement.unlocked ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{achievement.title}</p>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${achievement.unlocked ? 'bg-emerald-600 text-white' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'}`}>
+                      {achievement.unlocked ? '해금' : '잠김'}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{achievement.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
 
       {bagOpen ? (
@@ -516,6 +722,40 @@ export function CatchGame() {
   );
 }
 
+function HubCard({
+  title,
+  desc,
+  actionLabel,
+  onAction,
+  tone,
+  children,
+}: {
+  title: string;
+  desc: string;
+  actionLabel: string;
+  onAction: () => void;
+  tone: 'emerald' | 'amber' | 'sky' | 'zinc';
+  children: ReactNode;
+}) {
+  const toneClass = {
+    emerald: 'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20',
+    amber: 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20',
+    sky: 'border-sky-200 bg-sky-50 dark:border-sky-900 dark:bg-sky-950/20',
+    zinc: 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900',
+  }[tone];
+
+  return (
+    <article className={`rounded-3xl border p-6 ${toneClass}`}>
+      <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
+      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{desc}</p>
+      <div className="mt-4">{children}</div>
+      <button onClick={onAction} className="mt-5 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+        {actionLabel}
+      </button>
+    </article>
+  );
+}
+
 function StatCard({ label, value, tone }: { label: string; value: string; tone: 'emerald' | 'sky' | 'amber' | 'zinc' }) {
   const toneClass = {
     emerald: 'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40',
@@ -528,6 +768,15 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone: 
     <div className={`rounded-2xl border p-5 ${toneClass}`}>
       <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
       <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{value}</p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/60">
+      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">{label}</p>
+      <p className="mt-2 text-lg font-bold text-zinc-900 dark:text-zinc-100">{value}</p>
     </div>
   );
 }
