@@ -31,7 +31,7 @@ const LEGACY_STORAGE_KEY = 'poke-bowl-catch-game-v1';
 const allPokemon = getPokemonList();
 const pokemonDataMap = new Map(allPokemon.map((item) => [item.slug, item]));
 
-type GameTab = 'home' | 'catch' | 'shop' | 'dex' | 'history' | 'achievements';
+type GameTab = 'home' | 'catch' | 'stats' | 'shop' | 'dex' | 'history' | 'achievements';
 
 type CatchGender = SpriteGender;
 
@@ -212,6 +212,7 @@ function defaultShopStats(): ShopStats {
 const TABS: { id: GameTab; label: string }[] = [
   { id: 'home', label: '홈' },
   { id: 'catch', label: '잡기' },
+  { id: 'stats', label: '통계' },
   { id: 'shop', label: '상점' },
   { id: 'dex', label: '도감' },
   { id: 'history', label: '기록' },
@@ -803,16 +804,6 @@ export function CatchGame() {
           </div>
         </section>
 
-        {activeTab !== 'catch' ? (
-          <section className="grid gap-4 md:grid-cols-5">
-            <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
-            <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
-            <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
-            <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
-            <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
-          </section>
-        ) : null}
-
         {activeTab === 'home' ? (
           <section className="space-y-6">
             <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -887,6 +878,15 @@ export function CatchGame() {
               <p className="text-sm text-zinc-600 dark:text-zinc-300">총 구매 {shopStats.purchaseCount}회 · 구매한 볼 {shopStats.purchasedBalls}개</p>
             </HubCard>
             <HubCard
+              title="통계"
+              desc="점수, 코인, 연속 포획, 등록 수, 보상 대기 상태를 따로 본다."
+              actionLabel="통계 보기"
+              onAction={() => setActiveTab('stats')}
+              tone="zinc"
+            >
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">총 점수 {score}점 · 보유 코인 {coins} · 최고 연속 {bestStreak}회</p>
+            </HubCard>
+            <HubCard
               title="도감"
               desc="지방별로 잡은 포켓몬을 진짜 도감처럼 모으고 상세 정보를 확인한다."
               actionLabel="도감 보기"
@@ -906,6 +906,34 @@ export function CatchGame() {
               {topTypeEntry ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">현재 가장 많이 잡은 타입: {topTypeEntry[0]} {topTypeEntry[1]}회</p> : null}
             </HubCard>
             </section>
+          </section>
+        ) : null}
+
+        {activeTab === 'stats' ? (
+          <section className="space-y-6">
+            <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">Progress stats</p>
+                  <h3 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">현재 진행 통계</h3>
+                </div>
+                <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">허브 분리 통계</span>
+              </div>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                <StatCard label="총 점수" value={`${score}점`} tone="emerald" />
+                <StatCard label="보유 코인" value={`${coins}`} tone="amber" />
+                <StatCard label="최고 연속" value={`${bestStreak}회`} tone="sky" />
+                <StatCard label="도감 등록" value={`${caughtCount}종`} tone="emerald" />
+                <StatCard label="보상 대기" value={`${claimableAchievementCount + claimableTypeSupplyCount}개`} tone="zinc" />
+              </div>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <MiniStat label="성공 포획" value={`${successfulCatchCount}회`} />
+                <MiniStat label="현재 지방" value={selectedRegion.name.ko} />
+                <MiniStat label="남은 인카운터" value={`${selectedRegionRemaining}/${selectedRegion.maxEncounters}`} />
+              </div>
+            </article>
           </section>
         ) : null}
 
