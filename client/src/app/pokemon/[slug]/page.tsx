@@ -5,7 +5,7 @@ import { auth } from '@/auth';
 import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { VotePanel } from '@/components/legal-ball/VotePanel';
-import { findPokemonBySlug, getLegalityLabel } from '@/lib/ball-data';
+import { findPokemonBySlug } from '@/lib/ball-data';
 
 export default async function PokemonDetailPage({
   params,
@@ -38,16 +38,12 @@ export default async function PokemonDetailPage({
         </div>
       </header>
 
-      <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900">
+      <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 sm:grid-cols-2 dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">대표 추천</p>
           <div className="mt-2">
             {item.recommendedBall ? <BallChip ballKey={item.recommendedBall.key} /> : <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">아직 없음</p>}
           </div>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">합법성 상태</p>
-          <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{getLegalityLabel(item.legality.status)}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">대체 후보</p>
@@ -92,16 +88,15 @@ export default async function PokemonDetailPage({
 
       <section className="grid gap-4 md:grid-cols-2">
         <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">합법성 메모</h2>
-          <p className="mt-3 text-sm leading-7 text-zinc-700 dark:text-zinc-300">{item.legality.note || '추가 메모 없음'}</p>
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">추천 메모</h2>
+          <p className="mt-3 text-sm leading-7 text-zinc-700 dark:text-zinc-300">{item.sourceNote || '기본 추천 메모를 준비 중이다.'}</p>
           <p className="mt-3 text-sm leading-7 text-zinc-700 dark:text-zinc-300">{item.obtainNote || '입수 메모 없음'}</p>
         </article>
 
-        <article className="rounded-2xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950/50">
-          <h2 className="text-xl font-semibold text-amber-900 dark:text-amber-200">주의</h2>
-          <p className="mt-3 text-sm leading-7 text-amber-900/90 dark:text-amber-100/90">
-            이 추천은 비공식 팬메이드 큐레이션이다. 미적 추천과 실제 입수 가능 여부는 다를 수 있으니,
-            실사용 전에는 세대/이벤트/교배 루트를 다시 확인하는 쪽이 안전하다.
+        <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/50">
+          <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-200">추천 기준</h2>
+          <p className="mt-3 text-sm leading-7 text-emerald-900/90 dark:text-emerald-100/90">
+            기본 볼 추천은 시트 기반 큐레이션을 바탕으로 정리하고, 투표는 그 위에 취향 데이터를 덧붙이는 구조로 간다.
           </p>
         </article>
       </section>

@@ -2,6 +2,7 @@
 
 ## 목표
 운영자는 Google Sheet만 수정하고, 로컬 스크립트가 이를 정적 사이트용 JSON으로 변환한다.
+현재 기준 원본은 구조화 CSV 1장이 아니라 **세대별 Excel/Sheet 보드**이므로, 우선 workbook을 로컬에 보관하고 그 위에서 추천 파서를 만든다.
 
 ## 원칙
 - 서버 호출 없이 빌드 시점 데이터 고정
@@ -11,8 +12,18 @@
 
 ## 권장 시트 탭
 
-### 1. `pokemon_ball_matches`
-메인 데이터
+### 1. `legal-matching-pokeballs.xlsx`
+메인 추천 원본
+
+- `Gen 1` ~ `Gen 9`
+- `Vivillon`
+- `Alcremie`
+- 셀/배치 기반 추천 보드
+
+이 원본에서 사이트용 추천 JSON/CSV를 뽑아낸다.
+
+### 2. `pokemon_ball_matches`
+사이트용 정규화 테이블
 
 | column | 설명 |
 | --- | --- |
@@ -28,12 +39,10 @@
 | alt_balls | 대체 볼 목록, `friend-ball,dusk-ball` 식 |
 | design_tags | 디자인 태그, `cute,royal,mechanic` 식 |
 | obtain_note | 입수 메모 |
-| legality_status | `official`, `limited`, `check` 중 하나 |
-| legality_note | 합법성/입수 제한 관련 메모 |
 | source_note | 추천 근거 메모 |
 | published | `TRUE/FALSE` |
 
-### 2. `ball_catalog`
+### 3. `ball_catalog`
 볼 메타 데이터
 
 | column | 설명 |
@@ -46,7 +55,7 @@
 | official_name | 공식 표기 |
 | sort_order | 정렬값 |
 
-### 3. `site_copy`
+### 4. `site_copy`
 사이트 고정 문구
 
 | key | ko | en |
@@ -85,8 +94,8 @@
 ```
 
 ## 변환 흐름
-1. 시트에서 CSV export
-2. `data/source/*.csv` 저장
+1. `scripts/fetch-sheet-workbook.mjs` 로 workbook 갱신
+2. workbook 또는 수동 export에서 `data/source/*.csv` 정규화
 3. `scripts/build-ball-data.mjs` 실행
 4. 검증 통과 시 `data/generated/*.json` 생성
 5. `client/public/data/`로 복사 또는 빌드 전 참조
@@ -96,9 +105,8 @@
 - `slug` 유일해야 함
 - `recommended_ball`, `alt_balls`는 `ball_catalog.ball_key`에 존재해야 함
 - `published != TRUE` 인 행은 제외
-- `legality_status` 허용값 제한
+
 
 ## 운영 메모
-- 합법성 문구는 추천 이유와 섞지 말 것
 - 비공식 프로젝트 고지는 사이트 상단/하단 둘 중 한 곳에 고정
 - 상표/권리 고지는 footer 또는 about에 별도 배치

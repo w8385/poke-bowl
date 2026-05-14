@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { PokemonCard } from '@/components/legal-ball/PokemonCard';
 import { useLocale } from '@/hooks/useLocale';
-import { PokemonDisplayEntry, getAvailableGenerations, getAvailableTypes, getBallLabel, getLegalityLabel } from '@/lib/ball-data';
+import { PokemonDisplayEntry, getAvailableGenerations, getAvailableTypes, getBallLabel } from '@/lib/ball-data';
 import { formatGenerationLabel } from '@/lib/locale';
 
 const INITIAL_LIMIT = 60;
@@ -30,7 +30,6 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [generationFilter, setGenerationFilter] = useState(initialGeneration);
-  const [legalityFilter, setLegalityFilter] = useState('all');
 
   const types = useMemo(() => getAvailableTypes(), []);
   const generations = useMemo(() => getAvailableGenerations(), []);
@@ -40,16 +39,15 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
       if (!matches(item, query)) return false;
       if (typeFilter !== 'all' && !item.types.includes(typeFilter)) return false;
       if (generationFilter !== 'all' && item.generation !== Number(generationFilter)) return false;
-      if (legalityFilter !== 'all' && item.legality.status !== legalityFilter) return false;
       return true;
     });
 
-    if (!query && typeFilter === 'all' && generationFilter === 'all' && legalityFilter === 'all') {
+    if (!query && typeFilter === 'all' && generationFilter === 'all') {
       return results.slice(0, INITIAL_LIMIT);
     }
 
     return results;
-  }, [generationFilter, items, legalityFilter, query, typeFilter]);
+  }, [generationFilter, items, query, typeFilter]);
 
   return (
     <section className="space-y-5">
@@ -65,7 +63,7 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
           className="mt-3 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none ring-0 transition placeholder:text-zinc-400 focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
         />
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
             <span className="mb-2 block font-medium text-zinc-800 dark:text-zinc-200">세대</span>
             <select
@@ -98,36 +96,22 @@ export function SearchInput({ items, initialGeneration = 'all' }: { items: Pokem
             </select>
           </label>
 
-          <label className="block text-sm">
-            <span className="mb-2 block font-medium text-zinc-800 dark:text-zinc-200">합법성</span>
-            <select
-              value={legalityFilter}
-              onChange={(event) => setLegalityFilter(event.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-            >
-              <option value="all">전체 상태</option>
-              <option value="official">{getLegalityLabel('official')}</option>
-              <option value="limited">{getLegalityLabel('limited')}</option>
-              <option value="check">{getLegalityLabel('check')}</option>
-            </select>
-          </label>
         </div>
 
         <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-          전체 포켓몬을 세대별로 먼저 채워두고, 운영자 추천/합법성 메모는 순차적으로 보강하는 구조다.
+          전체 포켓몬을 세대별로 먼저 열고, 기본 추천은 시트 기반으로 순차 확장한다.
         </p>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-300">
         <p>
           표시 <span className="font-semibold text-zinc-900 dark:text-zinc-100">{filtered.length}</span>건
-          {!query && typeFilter === 'all' && generationFilter === 'all' && legalityFilter === 'all' ? ` / 전체 ${items.length}건 중 일부` : ''}
+          {!query && typeFilter === 'all' && generationFilter === 'all' ? ` / 전체 ${items.length}건 중 일부` : ''}
         </p>
         <div className="flex flex-wrap gap-2">
           {query ? <p>검색어: {query}</p> : <p>기본 목록</p>}
           {generationFilter !== 'all' ? <p>세대: {formatGenerationLabel(locale, generationFilter)}</p> : null}
           {typeFilter !== 'all' ? <p>타입: {typeFilter}</p> : null}
-          {legalityFilter !== 'all' ? <p>합법성: {getLegalityLabel(legalityFilter as PokemonDisplayEntry['legality']['status'])}</p> : null}
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallIcon } from '@/components/legal-ball/BallIcon';
-import { PokemonDisplayEntry, getBallLabel, getLegalityLabel } from '@/lib/ball-data';
+import { PokemonDisplayEntry, getBallLabel } from '@/lib/ball-data';
 
 export function PokemonCard({ item }: { item: PokemonDisplayEntry }) {
   return (
@@ -43,10 +43,6 @@ export function PokemonCard({ item }: { item: PokemonDisplayEntry }) {
             {type}
           </span>
         ))}
-      </div>
-
-      <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
-        <span className="font-medium text-zinc-800 dark:text-zinc-100">합법성:</span> {getLegalityLabel(item.legality.status)}
       </div>
     </Link>
   );
