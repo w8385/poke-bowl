@@ -49,6 +49,18 @@ type CatchRecord = {
   createdAt: string;
 };
 
+type PokedexDetail = {
+  slug: string;
+  genus: string;
+  flavorText: string;
+  habitat: string | null;
+  shape: string | null;
+  captureRate: number;
+  heightM: number;
+  weightKg: number;
+  abilities: Array<{ name: string; hidden: boolean }>;
+};
+
 type CollectionEntry = {
   firstBallKey: string;
   caughtBalls: string[];
@@ -114,6 +126,13 @@ type SavedState = {
   claimedTypeSupplies?: string[];
   activeTab?: GameTab;
   selectedRegionId?: string;
+  favoriteRecords?: Record<string, string>;
+};
+
+type AuthSession = {
+  user?: {
+    email?: string | null;
+  };
 };
 
 function cloneDefaultInventory() {
@@ -211,6 +230,19 @@ function getGenderCountLabel(gender: CatchGender, count: number) {
   return `무성 ${count}`;
 }
 
+function getRecordKey(record: Pick<CatchRecord, 'encounterId' | 'ballKey' | 'createdAt'>) {
+  return `${record.encounterId}:${record.ballKey}:${record.createdAt}`;
+}
+
+function formatRecordTime(value: string) {
+  return new Date(value).toLocaleString('ko-KR', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function CatchGame() {
   const locale = useLocale();
   const [inventory, setInventory] = useState<Inventory>(cloneDefaultInventory);
@@ -234,6 +266,11 @@ export function CatchGame() {
   const [shopPopup, setShopPopup] = useState<ShopPopup | null>(null);
   const [dexModal, setDexModal] = useState<DexModalState | null>(null);
   const [selectedDexGeneration, setSelectedDexGeneration] = useState(1);
+  const [favoriteRecords, setFavoriteRecords] = useState<Record<string, string>>({});
+  const [dexDetail, setDexDetail] = useState<PokedexDetail | null>(null);
+  const [dexDetailLoading, setDexDetailLoading] = useState(false);
+  const [dexAction, setDexAction] = useState<string | null>(null);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [claimedAchievements, setClaimedAchievements] = useState<string[]>([]);
   const [claimedTypeSupplies, setClaimedTypeSupplies] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<GameTab>('home');
@@ -279,6 +316,11 @@ export function CatchGame() {
   const selectedRegion = regions.find((region) => region.id === selectedRegionId) ?? regions[0];
   const selectedRegionCaught = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation && collection[pokemon.slug]).length, [collection, selectedRegion]);
   const selectedRegionTotal = useMemo(() => allPokemon.filter((pokemon) => pokemon.generation === selectedRegion.generation).length, [selectedRegion]);
+  const selectedPokemonRecords = useMemo(() => {
+    if (!selectedDexPokemon) return [];
+    return history.filter((item) => item.slug === selectedDexPokemon.slug);
+  }, [history, selectedDexPokemon]);
+  const selectedFavoriteRecordKey = selectedDexPokemon ? favoriteRecords[selectedDexPokemon.slug] ?? null : null;
   const encounterBadge = encounter.pokemon.isMythical
     ? { label: 'MYTHICAL', tone: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-200' }
     : encounter.pokemon.isLegendary
@@ -304,6 +346,7 @@ export function CatchGame() {
         setEncounter(saved.encounter ?? createEncounter(restoredRegionId));
         setShopStats(saved.shopStats ?? defaultShopStats());
         setTypeCatchStats(normalizeTypeCatchStats(saved.typeCatchStats));
+        setFavoriteRecords(saved.favoriteRecords ?? {});
         setClaimedAchievements(saved.claimedAchievements ?? []);
         setClaimedTypeSupplies(saved.claimedTypeSupplies ?? []);
         setActiveTab(saved.activeTab ?? 'home');
@@ -332,15 +375,52 @@ export function CatchGame() {
       claimedTypeSupplies,
       activeTab,
       selectedRegionId,
+      favoriteRecords,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, typeCatchStats, claimedAchievements, claimedTypeSupplies, activeTab, selectedRegionId]);
+  }, [hydrated, inventory, score, coins, streak, bestStreak, collection, history, encounter, shopStats, typeCatchStats, claimedAchievements, claimedTypeSupplies, activeTab, selectedRegionId, favoriteRecords]);
 
   useEffect(() => {
     if ((inventory[selectedBall] ?? 0) > 0) return;
     const fallback = ownedBalls[0]?.key ?? 'poke-ball';
     setSelectedBall(fallback);
   }, [inventory, ownedBalls, selectedBall]);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setAuthSession(data))
+      .catch(() => setAuthSession(null));
+  }, []);
+
+  useEffect(() => {
+    if (!dexModal?.slug) {
+      setDexDetail(null);
+      setDexAction(null);
+      return;
+    }
+
+    let alive = true;
+    setDexDetailLoading(true);
+    fetch(`/api/pokedex/${dexModal.slug}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!alive) return;
+        setDexDetail(data);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setDexDetail(null);
+      })
+      .finally(() => {
+        if (!alive) return;
+        setDexDetailLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [dexModal]);
 
   function consumeBall(ballKey: string) {
     setInventory((prev) => ({ ...prev, [ballKey]: Math.max(0, (prev[ballKey] ?? 0) - 1) }));
@@ -351,6 +431,45 @@ export function CatchGame() {
     setEncounter(createEncounter(regionId));
     setLastResult(null);
     setLastReward(null);
+  }
+
+  async function toggleFavoriteRecord(record: CatchRecord) {
+    const recordKey = getRecordKey(record);
+    const nextKey = selectedFavoriteRecordKey === recordKey ? null : recordKey;
+
+    setFavoriteRecords((prev) => {
+      if (!nextKey) {
+        const next = { ...prev };
+        delete next[record.slug];
+        return next;
+      }
+      return { ...prev, [record.slug]: nextKey };
+    });
+
+    if (!nextKey) {
+      setDexAction('즐겨찾기 해제됨');
+      return;
+    }
+
+    if (authSession?.user?.email) {
+      try {
+        const response = await fetch('/api/votes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: record.slug, ballKey: record.ballKey }),
+        });
+        if (response.ok) {
+          setDexAction(`즐겨찾기 저장 · ${getBallLabel(record.ballKey)} 투표 반영`);
+          return;
+        }
+      } catch {
+        // ignore network failure, local favorite still wins
+      }
+      setDexAction('즐겨찾기 저장 · 투표 반영은 잠시 실패');
+      return;
+    }
+
+    setDexAction('즐겨찾기 저장 · 로그인하면 투표에 자동 반영');
   }
 
   const nextEncounter = useCallback(() => {
@@ -1303,15 +1422,20 @@ export function CatchGame() {
                 <>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <MiniStat label="총 포획" value={`${selectedDexEntry.totalCaught}회`} />
-                    <MiniStat label="첫 포획 볼" value={getBallLabel(selectedDexEntry.firstBallKey)} />
+                    <MiniStat label="즐겨찾기" value={selectedFavoriteRecordKey ? '지정됨' : '없음'} />
                     <MiniStat label="사용 볼 수" value={`${selectedDexEntry.caughtBalls.length}종`} />
                   </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">성별 기록</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                  {dexAction ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+                      {dexAction}
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+                    <div className="flex flex-wrap gap-2">
                       {getAvailableGenders(selectedDexPokemon.genderRate).map((gender) => (
-                        <span key={`dex-modal-gender-${gender}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                        <span key={`dex-modal-gender-${gender}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">
                           <PokemonSprite
                             dex={selectedDexPokemon.dex}
                             baseSprite={selectedDexPokemon.sprite}
@@ -1324,17 +1448,88 @@ export function CatchGame() {
                         </span>
                       ))}
                     </div>
-                  </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">포획에 쓴 볼</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {selectedDexEntry.caughtBalls.map((ballKey) => (
-                        <span key={`dex-modal-ball-${ballKey}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                        <span key={`dex-modal-ball-${ballKey}`} className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">
                           <BallIcon ballKey={ballKey} size={14} />
                           {getBallLabel(ballKey)} x{selectedDexEntry.caughtByBall[ballKey] ?? 0}
                         </span>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+                      <div className="flex flex-wrap gap-2">
+                        {dexDetailLoading ? <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">도감 불러오는 중</span> : null}
+                        {dexDetail?.genus ? <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">{dexDetail.genus}</span> : null}
+                        {dexDetail?.habitat ? <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">서식지 {dexDetail.habitat}</span> : null}
+                        {dexDetail?.shape ? <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">체형 {dexDetail.shape}</span> : null}
+                      </div>
+                      <p className="mt-4 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{dexDetail?.flavorText || '도감 설명을 불러오는 중이다.'}</p>
+                    </div>
+
+                    <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+                      <div className="grid grid-cols-2 gap-3">
+                        <MiniStat label="키" value={dexDetail ? `${dexDetail.heightM}m` : '...'} />
+                        <MiniStat label="몸무게" value={dexDetail ? `${dexDetail.weightKg}kg` : '...'} />
+                        <MiniStat label="포획률" value={dexDetail ? `${dexDetail.captureRate}` : '...'} />
+                        <MiniStat label="특성 수" value={dexDetail ? `${dexDetail.abilities.length}` : '...'} />
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(dexDetail?.abilities ?? []).map((ability) => (
+                          <span key={`ability-${ability.name}`} className={`rounded-full px-3 py-1 text-xs font-semibold ${ability.hidden ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200' : 'bg-white text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200'}`}>
+                            {ability.name}{ability.hidden ? ' · 숨겨진 특성' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">포획 기록</h4>
+                      {authSession?.user?.email ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">즐겨찾기 = 투표 자동 반영</span> : <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">로그인 시 투표 자동 반영</span>}
+                    </div>
+                    <div className="space-y-2">
+                      {selectedPokemonRecords.map((record) => {
+                        const recordKey = getRecordKey(record);
+                        const active = selectedFavoriteRecordKey === recordKey;
+                        const genderText = record.gender === 'unknown' ? '무성' : genderLabel(record.gender);
+                        return (
+                          <div key={recordKey} className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${active ? 'border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20' : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'}`}>
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="rounded-2xl bg-zinc-50 p-2 dark:bg-zinc-950">
+                                <PokemonSprite
+                                  dex={record.dex}
+                                  baseSprite={selectedDexPokemon.sprite}
+                                  gender={record.gender}
+                                  name={record.name}
+                                  size={28}
+                                  className="h-7 w-7"
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <BallIcon ballKey={record.ballKey} size={16} />
+                                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{getBallLabel(record.ballKey)}</span>
+                                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{genderText}</span>
+                                  {active ? <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white">즐겨찾기</span> : null}
+                                </div>
+                                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{record.title} · {formatRecordTime(record.createdAt)}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleFavoriteRecord(record)}
+                              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${active ? 'bg-amber-500 text-white hover:bg-amber-600' : 'border border-zinc-300 text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200'}`}
+                            >
+                              {active ? '대표 선택됨' : '대표로 선택'}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
