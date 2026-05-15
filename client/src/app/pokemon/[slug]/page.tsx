@@ -5,7 +5,28 @@ import { auth } from '@/auth';
 import { PokemonSprite } from '@/components/PokemonSprite';
 import { BallChip } from '@/components/legal-ball/BallChip';
 import { VotePanel } from '@/components/legal-ball/VotePanel';
-import { findPokemonBySlug } from '@/lib/ball-data';
+import { findPokemonBySlug, getLegalityLabel } from '@/lib/ball-data';
+import { getVoteReadiness } from '@/lib/vote-readiness';
+
+function MetaChip({ children, tone = 'zinc' }: { children: React.ReactNode; tone?: 'zinc' | 'emerald' | 'amber' | 'sky' }) {
+  const toneClass = {
+    zinc: 'border border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100',
+    emerald: 'border border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-100',
+    amber: 'border border-amber-200 bg-amber-100 text-amber-900 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-100',
+    sky: 'border border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-100',
+  }[tone];
+
+  return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${toneClass}`}>{children}</span>;
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </article>
+  );
+}
 
 export default async function PokemonDetailPage({
   params,
@@ -15,90 +36,90 @@ export default async function PokemonDetailPage({
   const { slug } = await params;
   const item = findPokemonBySlug(slug);
   const session = await auth();
+  const voteReadiness = getVoteReadiness();
 
   if (!item) notFound();
 
+  const tagList = [...item.paletteTags, ...item.designTags];
+  const legalityTone = item.legality.status === 'official' ? 'emerald' : item.legality.status === 'limited' ? 'amber' : 'sky';
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 px-6 py-12 sm:px-10 dark:text-zinc-100">
-      <header className="space-y-3">
+    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-12 sm:px-10 dark:text-zinc-100">
+      <header className="space-y-4">
         <Link href="/pokemon" className="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-300">
           ← 목록으로
         </Link>
-        <div className="flex flex-wrap items-center gap-5">
-          <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-zinc-50 dark:bg-zinc-800/80">
-            <PokemonSprite dex={item.dex} baseSprite={item.sprite} gender="unknown" name={item.name.en} size={96} className="h-24 w-24" />
+
+        <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-950">
+                <PokemonSprite dex={item.dex} baseSprite={item.sprite} gender="unknown" name={item.name.en} size={96} className="h-24 w-24" />
+              </div>
+              <div className="min-w-0 space-y-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Summary</p>
+                  <p className="mt-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">#{item.dex}</p>
+                  <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+                    {item.name.ko || item.name.en}
+                  </h1>
+                  <p className="text-base text-zinc-600 dark:text-zinc-300">{item.name.en}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <MetaChip tone={item.curated ? 'emerald' : 'sky'}>{item.curated ? '운영 추천 있음' : '투표 중심'}</MetaChip>
+                  <MetaChip tone={legalityTone}>{getLegalityLabel(item.legality.status)}</MetaChip>
+                  <MetaChip>{item.generation}세대</MetaChip>
+                  {item.types.map((type) => (
+                    <MetaChip key={type}>{type}</MetaChip>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <article className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/45">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">대표 추천</h2>
+                </div>
+                <MetaChip tone={voteReadiness.ready ? 'emerald' : 'amber'}>{voteReadiness.ready ? '투표 가능 흐름' : '설정 확인 필요'}</MetaChip>
+              </div>
+              <div className="mt-4">
+                {item.recommendedBall ? <BallChip ballKey={item.recommendedBall.key} /> : <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">아직 없음</p>}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <MetaChip tone="emerald">후보 {Math.max(item.altBalls.length + (item.recommendedBall ? 1 : 0), 1)}개</MetaChip>
+                <MetaChip tone={legalityTone}>{getLegalityLabel(item.legality.status)}</MetaChip>
+              </div>
+            </article>
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">#{item.dex}</p>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-              {item.name.ko || item.name.en}
-            </h1>
-            <p className="text-base text-zinc-600 dark:text-zinc-300">{item.name.en}</p>
-          </div>
-        </div>
+        </section>
       </header>
 
-      <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 sm:grid-cols-2 dark:border-zinc-800 dark:bg-zinc-900">
-        <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">대표 추천</p>
-          <div className="mt-2">
-            {item.recommendedBall ? <BallChip ballKey={item.recommendedBall.key} /> : <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">아직 없음</p>}
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <SectionCard title="추천">
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm leading-7 text-zinc-700 shadow-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-200">
+            {item.recommendedBall?.reason || '아직 운영자 큐레이션이 없어서 현재는 투표 후보 중심으로 본다.'}
           </div>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">대체 후보</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {item.altBalls.length ? item.altBalls.map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} className="w-full justify-center" />) : <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">투표 후보에서 선택 가능</p>}
-          </div>
-        </div>
-      </section>
 
-      <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">추천 근거</h2>
-        <p className="text-sm leading-7 text-zinc-700 dark:text-zinc-300">
-          {item.recommendedBall?.reason || '아직 운영자 큐레이션이 없는 포켓몬이다. 지금은 전체 지원 볼 후보를 보고 유저 투표부터 받을 수 있다.'}
-        </p>
-
-        <div className="grid gap-4 pt-2 sm:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">타입</h3>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {item.types.map((type) => (
-                <span key={type} className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-                  {type}
-                </span>
-              ))}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-600 dark:bg-zinc-950/85">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">대체 후보</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {item.altBalls.length ? item.altBalls.map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} />) : <MetaChip tone="sky">투표 후보에서 선택</MetaChip>}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-600 dark:bg-zinc-950/85">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">색감 · 디자인</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {tagList.length ? tagList.map((tag) => <MetaChip key={tag} tone="emerald">{tag}</MetaChip>) : <MetaChip>태그 준비 중</MetaChip>}
+              </div>
             </div>
           </div>
+        </SectionCard>
 
-          <div>
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">색감/디자인 태그</h3>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {[...item.paletteTags, ...item.designTags].length ? ([...item.paletteTags, ...item.designTags].map((tag) => (
-                <span key={tag} className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-                  {tag}
-                </span>
-              ))) : <span className="text-sm text-zinc-500 dark:text-zinc-400">아직 태그 없음</span>}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <VotePanel pokemon={item} signedIn={Boolean(session?.user?.email)} />
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">추천 메모</h2>
-          <p className="mt-3 text-sm leading-7 text-zinc-700 dark:text-zinc-300">{item.sourceNote || '기본 추천 메모를 준비 중이다.'}</p>
-          <p className="mt-3 text-sm leading-7 text-zinc-700 dark:text-zinc-300">{item.obtainNote || '입수 메모 없음'}</p>
-        </article>
-
-        <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/50">
-          <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-200">추천 기준</h2>
-          <p className="mt-3 text-sm leading-7 text-emerald-900/90 dark:text-emerald-100/90">
-            기본 볼 추천은 시트 기반 큐레이션을 바탕으로 정리하고, 투표는 그 위에 취향 데이터를 덧붙이는 구조로 간다.
-          </p>
-        </article>
+        <VotePanel pokemon={item} signedIn={Boolean(session?.user?.email)} voteReady={voteReadiness.ready} />
       </section>
     </main>
   );

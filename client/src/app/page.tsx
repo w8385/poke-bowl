@@ -1,21 +1,15 @@
-'use client';
-
 import Link from 'next/link';
 
+import { GenerationBrowser } from '@/components/home/GenerationBrowser';
 import { BallChip } from '@/components/legal-ball/BallChip';
-import { useLocale } from '@/hooks/useLocale';
-import { getBallCatalog, getGenerationCounts } from '@/lib/ball-data';
-import { formatGenerationLabel, formatGenerationRange, getGenerationWord } from '@/lib/locale';
+import { getBallCatalog } from '@/lib/ball-data';
 
-const generationCards = getGenerationCounts();
 const featuredBalls = getBallCatalog();
 
 export default function Home() {
-  const locale = useLocale();
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-12 text-zinc-900 sm:px-10 dark:text-zinc-100">
-      <section className="space-y-3">
+    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-8 text-zinc-900 sm:gap-10 sm:px-10 sm:py-12 dark:text-zinc-100">
+      <section className="space-y-2 sm:space-y-3">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
           Poké Bowl
         </p>
@@ -26,6 +20,20 @@ export default function Home() {
           <p className="max-w-3xl text-base text-zinc-700 sm:text-lg dark:text-zinc-300">
             세대별 탐색, 투표, 포획 루프를 한곳에 묶은 팬 사이트.
           </p>
+        </div>
+        <div className="flex flex-wrap gap-2 pt-1 sm:gap-3 sm:pt-2">
+          <Link
+            href="/pokemon"
+            className="inline-flex items-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            도감 바로 보기
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
+          >
+            로그인 준비 확인
+          </Link>
         </div>
       </section>
 
@@ -42,7 +50,7 @@ export default function Home() {
             <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-sky-900/60">세대별 브라우징</span>
           </div>
           <div className="mt-6 inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white">
-            통계 보러 가기
+            도감 탐색 시작
           </div>
         </Link>
 
@@ -58,7 +66,7 @@ export default function Home() {
             <span className="rounded-full bg-white/80 px-3 py-1 dark:bg-emerald-900/60">볼 수집 플레이</span>
           </div>
           <div className="mt-6 inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-            미니게임 하러 가기
+            포획 루프 시작
           </div>
         </Link>
       </section>
@@ -74,25 +82,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-semibold">세대별 브라우징</h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{formatGenerationRange(locale, 1, 9)}</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {generationCards.map((item) => (
-            <Link
-              key={item.generation}
-              href={`/pokemon?generation=${item.generation}`}
-              className="rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-emerald-300 hover:shadow dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500"
-            >
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{getGenerationWord(locale)}</p>
-              <h3 className="mt-2 text-2xl font-semibold">{formatGenerationLabel(locale, item.generation)}</h3>
-              <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{item.count}마리 탐색 가능</p>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <GenerationBrowser />
     </main>
   );
 }
