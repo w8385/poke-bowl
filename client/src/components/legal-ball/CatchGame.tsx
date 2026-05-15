@@ -1026,21 +1026,7 @@ export function CatchGame() {
 
             <div className="space-y-4">
               <article className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-                <div className="flex items-center justify-between gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Bag</p>
-                    <h3 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setBagOpen(true)}
-                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
-                  >
-                    가방 열기
-                  </button>
-                </div>
-
-                <div className="mt-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60 sm:p-5">
+                <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60 sm:p-5">
                   {selectedBallEntry ? (
                     <>
                       <div className="mb-3 flex items-center justify-between gap-3">
@@ -1087,6 +1073,20 @@ export function CatchGame() {
                   ) : (
                     <p className="text-sm text-zinc-600 dark:text-zinc-300">사용 가능한 볼이 없다. 상점에서 재보급하거나 진행을 리셋해 다시 시작할 수 있다.</p>
                   )}
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Bag</p>
+                    <h3 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBagOpen(true)}
+                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
+                  >
+                    가방 열기
+                  </button>
                 </div>
               </article>
             </div>
