@@ -784,22 +784,20 @@ export function CatchGame() {
     <>
       <div className="space-y-8">
         <section className="space-y-4">
-          <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => setActiveTab('catch')} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                  바로 잡기
-                </button>
-                <button onClick={resetRun} className="rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 dark:border-rose-900 dark:text-rose-200">
-                  초기화
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <MiniStat label="점수" value={`${score}점`} />
-                <MiniStat label="도감" value={`${caughtCount}종`} />
-                <MiniStat label="코인" value={`${coins}`} />
-                <MiniStat label="보상" value={`${claimableAchievementCount + claimableTypeSupplyCount}건`} />
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setActiveTab('catch')} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                바로 잡기
+              </button>
+              <button onClick={resetRun} className="rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 dark:border-rose-900 dark:text-rose-200">
+                초기화
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">점수 {score}점</span>
+              <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">도감 {caughtCount}종</span>
+              <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">코인 {coins}</span>
+              <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">보상 {claimableAchievementCount + claimableTypeSupplyCount}건</span>
             </div>
           </div>
 
