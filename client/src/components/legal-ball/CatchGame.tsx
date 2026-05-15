@@ -793,26 +793,20 @@ export function CatchGame() {
             </button>
           </div>
 
-          <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">탭 이동</span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-100">현재: {TABS.find((tab) => tab.id === activeTab)?.label ?? '홈'}</span>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {TABS.map((tab) => {
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? 'bg-emerald-600 text-white' : 'border border-zinc-300 text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100'}`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? 'bg-emerald-600 text-white' : 'border border-zinc-300 text-zinc-700 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100'}`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </section>
 
