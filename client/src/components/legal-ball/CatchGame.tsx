@@ -920,7 +920,6 @@ export function CatchGame() {
                         </div>
                         <div className="mt-3 flex items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">최대 인카운터 {region.maxEncounters}</p>
-                          {active ? <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">선택됨</span> : null}
                         </div>
                         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">{region.summary}</p>
                         <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
