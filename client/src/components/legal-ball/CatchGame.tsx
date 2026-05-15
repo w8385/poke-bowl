@@ -1075,14 +1075,10 @@ export function CatchGame() {
                             <p className="line-clamp-1 text-lg font-bold text-zinc-900 dark:text-zinc-100 sm:text-xl">{selectedBallEntry.nameKo}</p>
                             <p className="mt-1 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400 sm:text-sm">{selectedBallEntry.nameEn}</p>
                           </div>
-                          <div className="mt-4 grid grid-cols-2 gap-2 text-left">
+                          <div className="mt-4 text-left">
                             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950/70">
                               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Stock</p>
                               <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">x{inventory[selectedBallEntry.key] ?? 0}</p>
-                            </div>
-                            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950/70">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">State</p>
-                              <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{(inventory[selectedBallEntry.key] ?? 0) > 0 ? '던질 수 있음' : '재보급 필요'}</p>
                             </div>
                           </div>
                         </div>
