@@ -47,9 +47,9 @@ export type AdventureRegion = {
   theme: string;
   summary: string;
   art: {
-    emoji: string;
-    accent: string;
-    glow: string;
+    imagePath: string;
+    position?: string;
+    overlay?: string;
   };
   maxEncounters: number;
 };
@@ -57,15 +57,15 @@ export type AdventureRegion = {
 export const SHOP_BUNDLE_STEPS = [1, 2, 5, 10] as const;
 
 export const ADVENTURE_REGIONS: AdventureRegion[] = [
-  { id: 'kanto', generation: 1, name: { ko: '관동', en: 'Kanto' }, theme: 'starter', summary: '첫 모험의 시작점. 초반 포켓몬과 관동 대표 종이 등장한다.', art: { emoji: '🌿', accent: 'from-lime-300 via-emerald-300 to-sky-300', glow: 'bg-emerald-500/20' }, maxEncounters: 12 },
-  { id: 'johto', generation: 2, name: { ko: '성도', en: 'Johto' }, theme: 'heritage', summary: '전통과 숲, 탑의 분위기를 가진 성도 포켓몬을 만난다.', art: { emoji: '🏯', accent: 'from-amber-200 via-orange-300 to-lime-300', glow: 'bg-amber-500/20' }, maxEncounters: 12 },
-  { id: 'hoenn', generation: 3, name: { ko: '호연', en: 'Hoenn' }, theme: 'sea', summary: '바다와 화산, 열대 분위기의 호연 포켓몬을 수집한다.', art: { emoji: '🌊', accent: 'from-cyan-300 via-sky-300 to-rose-300', glow: 'bg-sky-500/20' }, maxEncounters: 14 },
-  { id: 'sinnoh', generation: 4, name: { ko: '신오', en: 'Sinnoh' }, theme: 'mountain', summary: '설산과 신화 이미지의 신오 포켓몬 위주로 조우한다.', art: { emoji: '🏔️', accent: 'from-slate-200 via-sky-200 to-indigo-300', glow: 'bg-indigo-500/20' }, maxEncounters: 14 },
-  { id: 'unova', generation: 5, name: { ko: '하나', en: 'Unova' }, theme: 'urban', summary: '도시와 다리, 개성 강한 하나 포켓몬이 등장한다.', art: { emoji: '🌆', accent: 'from-zinc-300 via-slate-300 to-sky-300', glow: 'bg-slate-500/20' }, maxEncounters: 16 },
-  { id: 'kalos', generation: 6, name: { ko: '칼로스', en: 'Kalos' }, theme: 'style', summary: '우아한 분위기와 페어리 감성이 강한 칼로스 지역이다.', art: { emoji: '🎀', accent: 'from-pink-200 via-fuchsia-200 to-sky-200', glow: 'bg-pink-500/20' }, maxEncounters: 16 },
-  { id: 'alola', generation: 7, name: { ko: '알로라', en: 'Alola' }, theme: 'island', summary: '섬 순례 감성으로 알로라 포켓몬만 포획할 수 있다.', art: { emoji: '🌺', accent: 'from-orange-300 via-yellow-200 to-cyan-300', glow: 'bg-orange-500/20' }, maxEncounters: 18 },
-  { id: 'galar', generation: 8, name: { ko: '가라르', en: 'Galar' }, theme: 'stadium', summary: '스타디움과 와일드에어리어 감성의 가라르 지역이다.', art: { emoji: '🏟️', accent: 'from-violet-300 via-indigo-300 to-emerald-300', glow: 'bg-violet-500/20' }, maxEncounters: 18 },
-  { id: 'paldea', generation: 9, name: { ko: '팔데아', en: 'Paldea' }, theme: 'openworld', summary: '자유 탐험 느낌으로 팔데아 포켓몬만 만날 수 있다.', art: { emoji: '🧭', accent: 'from-emerald-300 via-teal-300 to-amber-200', glow: 'bg-teal-500/20' }, maxEncounters: 20 },
+  { id: 'kanto', generation: 1, name: { ko: '관동', en: 'Kanto' }, theme: 'starter', summary: '첫 모험의 시작점. 초반 포켓몬과 관동 대표 종이 등장한다.', art: { imagePath: '/regions/kanto.png', position: 'center 52%', overlay: 'from-black/55 via-black/25 to-emerald-950/35' }, maxEncounters: 12 },
+  { id: 'johto', generation: 2, name: { ko: '성도', en: 'Johto' }, theme: 'heritage', summary: '전통과 숲, 탑의 분위기를 가진 성도 포켓몬을 만난다.', art: { imagePath: '/regions/johto.png', position: 'center 52%', overlay: 'from-black/55 via-black/25 to-amber-950/35' }, maxEncounters: 12 },
+  { id: 'hoenn', generation: 3, name: { ko: '호연', en: 'Hoenn' }, theme: 'sea', summary: '바다와 화산, 열대 분위기의 호연 포켓몬을 수집한다.', art: { imagePath: '/regions/hoenn.png', position: 'center 48%', overlay: 'from-black/55 via-black/20 to-sky-950/35' }, maxEncounters: 14 },
+  { id: 'sinnoh', generation: 4, name: { ko: '신오', en: 'Sinnoh' }, theme: 'mountain', summary: '설산과 신화 이미지의 신오 포켓몬 위주로 조우한다.', art: { imagePath: '/regions/sinnoh.png', position: 'center 54%', overlay: 'from-black/55 via-black/25 to-indigo-950/35' }, maxEncounters: 14 },
+  { id: 'unova', generation: 5, name: { ko: '하나', en: 'Unova' }, theme: 'urban', summary: '도시와 다리, 개성 강한 하나 포켓몬이 등장한다.', art: { imagePath: '/regions/unova.png', position: 'center 50%', overlay: 'from-black/55 via-black/20 to-slate-950/35' }, maxEncounters: 16 },
+  { id: 'kalos', generation: 6, name: { ko: '칼로스', en: 'Kalos' }, theme: 'style', summary: '우아한 분위기와 페어리 감성이 강한 칼로스 지역이다.', art: { imagePath: '/regions/kalos.png', position: 'center 50%', overlay: 'from-black/55 via-black/20 to-pink-950/35' }, maxEncounters: 16 },
+  { id: 'alola', generation: 7, name: { ko: '알로라', en: 'Alola' }, theme: 'island', summary: '섬 순례 감성으로 알로라 포켓몬만 포획할 수 있다.', art: { imagePath: '/regions/alola.png', position: 'center 46%', overlay: 'from-black/55 via-black/15 to-orange-950/35' }, maxEncounters: 18 },
+  { id: 'galar', generation: 8, name: { ko: '가라르', en: 'Galar' }, theme: 'stadium', summary: '스타디움과 와일드에어리어 감성의 가라르 지역이다.', art: { imagePath: '/regions/galar.png', position: 'center 44%', overlay: 'from-black/55 via-black/20 to-violet-950/35' }, maxEncounters: 18 },
+  { id: 'paldea', generation: 9, name: { ko: '팔데아', en: 'Paldea' }, theme: 'openworld', summary: '자유 탐험 느낌으로 팔데아 포켓몬만 만날 수 있다.', art: { imagePath: '/regions/paldea.png', position: 'center 48%', overlay: 'from-black/55 via-black/15 to-teal-950/35' }, maxEncounters: 20 },
 ];
 
 export function getPremierBonusForPurchase(totalBalls: number) {

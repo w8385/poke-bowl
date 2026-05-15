@@ -907,15 +907,21 @@ export function CatchGame() {
                         onClick={() => selectRegion(region.id)}
                         className={`rounded-3xl border p-4 text-left transition ${active ? 'border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/60'}`}
                       >
-                        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${region.art.accent} p-4 text-zinc-950`}>
-                          <div className={`absolute inset-0 ${region.art.glow}`} />
+                        <div
+                          className="relative overflow-hidden rounded-2xl p-4 text-white"
+                          style={{
+                            backgroundImage: `url(${region.art.imagePath})`,
+                            backgroundPosition: region.art.position ?? 'center',
+                            backgroundSize: 'cover',
+                          }}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-br ${region.art.overlay ?? 'from-black/55 via-black/25 to-black/35'}`} />
                           <div className="relative flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-700/80">Gen {region.generation}</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/80">Gen {region.generation}</p>
                               <p className="mt-1 text-xl font-black">{region.name.ko}</p>
-                              <p className="mt-1 text-xs font-medium text-zinc-800/80">{region.name.en}</p>
+                              <p className="mt-1 text-xs font-medium text-white/80">{region.name.en}</p>
                             </div>
-                            <span className="text-3xl leading-none">{region.art.emoji}</span>
                           </div>
                         </div>
                         <div className="mt-3 flex items-center justify-between gap-3">
