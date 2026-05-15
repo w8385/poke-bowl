@@ -213,11 +213,11 @@ function defaultShopStats(): ShopStats {
 const TABS: { id: GameTab; label: string }[] = [
   { id: 'home', label: '홈' },
   { id: 'catch', label: '잡기' },
-  { id: 'stats', label: '통계' },
   { id: 'shop', label: '상점' },
   { id: 'dex', label: '도감' },
-  { id: 'history', label: '기록' },
   { id: 'achievements', label: '업적' },
+  { id: 'stats', label: '통계' },
+  { id: 'history', label: '기록' },
 ];
 
 function getAvailableGenders(genderRate: number): CatchGender[] {
