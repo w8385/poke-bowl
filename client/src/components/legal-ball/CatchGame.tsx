@@ -960,41 +960,29 @@ export function CatchGame() {
                     {encounter.pokemon.altBalls.slice(0, 3).map((ballKey) => <BallChip key={ballKey} ballKey={ballKey} />)}
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <StatusCard eyebrow="Encounter" title={encounter.pokemon.name.ko || encounter.pokemon.name.en} status={encounterBadge.label} tone="emerald" chips={[`#${encounter.pokemon.dex}`, encounter.pokemon.types.join(' / ')]} className="hover:shadow-sm">
-                    <div className="mt-1 flex justify-center rounded-3xl bg-zinc-50 p-3 dark:bg-zinc-800/80">
-                      <PokemonSprite
-                        dex={encounter.pokemon.dex}
-                        baseSprite={encounter.pokemon.sprite}
-                        gender={encounterGender}
-                        name={encounter.pokemon.name.en}
-                        size={112}
-                        className="h-28 w-28"
-                      />
-                    </div>
-                  </StatusCard>
-                  <StatusCard eyebrow="Turn" title="현재 턴" status={`${encounter.turn}번째`} tone="sky" chips={[`탐험 ${regionEncounterCount} / ${selectedRegion.maxEncounters}`]} className="hover:shadow-sm" />
-                  <StatusCard eyebrow="Action" title="다음 선택" status={encounter.caught || encounter.escaped ? '다음 포켓몬' : '볼 던지기'} tone="amber" chips={[selectedBallEntry?.nameKo ?? '볼 선택 필요', '상점 이동 가능']} className="hover:shadow-sm" />
+                <div className="flex justify-center rounded-3xl bg-zinc-50 p-3 dark:bg-zinc-800/80">
+                  <PokemonSprite
+                    dex={encounter.pokemon.dex}
+                    baseSprite={encounter.pokemon.sprite}
+                    gender={encounterGender}
+                    name={encounter.pokemon.name.en}
+                    size={112}
+                    className="h-28 w-28"
+                  />
                 </div>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
-                <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Turn</p>
-                      <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{encounter.turn}번째 던지기</p>
-                    </div>
-                    <div className="rounded-2xl border border-white bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Route</p>
-                      <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{regionEncounterCount} / {selectedRegion.maxEncounters}</p>
-                    </div>
+              <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-3 py-1 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">턴 {encounter.turn}</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">탐험 {regionEncounterCount}/{selectedRegion.maxEncounters}</span>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:justify-self-end">
-                    <button onClick={() => setActiveTab('shop')} className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 hover:border-amber-400 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                      상점 이동
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setActiveTab('shop')} className="rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 hover:border-amber-400 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                      상점
                     </button>
-                    <button onClick={nextEncounter} disabled={regionRunClosed} className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${regionRunClosed ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500' : 'border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'}`}>
+                    <button onClick={nextEncounter} disabled={regionRunClosed} className={`rounded-full border px-3 py-2 text-sm font-semibold ${regionRunClosed ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500' : 'border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'}`}>
                       새 포켓몬
                     </button>
                   </div>
@@ -1039,45 +1027,27 @@ export function CatchGame() {
 
             <div className="space-y-4">
               <article className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  <MiniStat label="점수" value={`${score}점`} />
-                  <MiniStat label="코인" value={`${coins}`} />
-                  <MiniStat label="연속" value={`${bestStreak}회`} />
-                  <div className="hidden sm:block">
-                    <MiniStat label="등록" value={`${caughtCount}종`} />
+                <div className="flex items-center justify-between gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Bag</p>
+                    <h3 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
                   </div>
-                </div>
-              </article>
-
-              <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                  <div className="flex items-center justify-between gap-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Bag</p>
-                      <h3 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">내 가방</h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setBagOpen(true)}
-                      className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
-                    >
-                      가방 열기
-                    </button>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                    <StatusCard eyebrow="Selected" title="현재 볼" status={selectedBallEntry?.nameKo ?? '없음'} tone="sky" chips={[selectedBallEntry?.nameEn ?? 'no ball selected']} className="hover:shadow-sm" />
-                    <StatusCard eyebrow="Stock" title="남은 수량" status={selectedBallEntry ? `x${inventory[selectedBallEntry.key] ?? 0}` : '0'} tone="emerald" chips={[selectedBallEntry ? `${selectedBallIndex + 1} / ${ownedBalls.length}` : '재보급 필요']} className="hover:shadow-sm" />
-                    <StatusCard eyebrow="Throw" title="던지기 상태" status={selectedBallEntry && !encounter.caught && !encounter.escaped && (inventory[selectedBallEntry.key] ?? 0) > 0 ? 'ready' : 'hold'} tone="amber" chips={[encounter.caught ? '이미 포획' : encounter.escaped ? '도망감' : '바로 던질 수 있음']} className="hover:shadow-sm" />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBagOpen(true)}
+                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-100"
+                  >
+                    가방 열기
+                  </button>
                 </div>
 
-                <div className="mt-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60 sm:mt-6 sm:p-5">
+                <div className="mt-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/60 sm:p-5">
                   {selectedBallEntry ? (
                     <>
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Ball carousel</p>
-                          <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">지금 던질 볼을 빠르게 바꿀 수 있다</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Ball</p>
+                          <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{selectedBallEntry.nameKo}</p>
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">{selectedBallIndex + 1} / {ownedBalls.length}</span>
                       </div>
@@ -1105,8 +1075,8 @@ export function CatchGame() {
                               <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">x{inventory[selectedBallEntry.key] ?? 0}</p>
                             </div>
                             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950/70">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">Throw</p>
-                              <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{(inventory[selectedBallEntry.key] ?? 0) > 0 ? 'ready' : 'restock'}</p>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">State</p>
+                              <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{(inventory[selectedBallEntry.key] ?? 0) > 0 ? '던질 수 있음' : '재보급 필요'}</p>
                             </div>
                           </div>
                         </div>
